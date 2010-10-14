@@ -8,8 +8,12 @@ function setup() {
 }
 
 function updateList(json) {
+	var html = '';
 	for (var i = 0; i < json.length; i++) {
+		var item = json[ i ];
+		html += '<article><header>' + item.title + '</header><div>' + item.body + '</div></article>';
 	}
+	$('#items').html(html);
 }
 function updateTags(json) {
 	var html = '';
