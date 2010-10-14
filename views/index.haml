@@ -1,0 +1,17 @@
+!!! XML
+!!! strict
+%html{ xmlns: "http://www.w3.org/1999/xhtml" }
+  %head
+    %title
+      Sample haml template
+    %script(src='http://github.com/cowboy/javascript-debug/raw/master/ba-debug.min.js')
+    %script(src='http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js')
+    %script(src='/javascript/main.js')
+  %body
+    %nav
+      %a(href='/') Home
+      %a(href='/yesterday') Yesterday's Items
+      %a(href='/today') Today's Items
+    .left.date
+    .main
+    .right#tags

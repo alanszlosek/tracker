@@ -1,13 +1,8 @@
-var app = require('express').createServer();
-app.configure(function() {
-	app.set('view engine', 'jade');
-	//app.use(express.staticProvider(__dirname + '/public'));
-});
+require('./config/env')
 
-app.get('/', function(req, res){
-	res.render('index')
-
-});
-
-app.listen(3000);
+get('/', function(req, res){
+	return {
+		template: 'index'
+	}
+})
 

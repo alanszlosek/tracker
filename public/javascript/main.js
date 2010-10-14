@@ -1,7 +1,10 @@
+$(setup);
 function setup() {
 	$(document).delegate('#tags a', 'click', onTagClick);
 	$(document).delegate('a', 'click', onLinkClick);	
-	// set up histo
+
+	// pull!
+	$.get('/items', updateList, 'json');
 }
 
 function updateList(json) {
@@ -34,7 +37,7 @@ function onTagClick() {
 		});
 		if (tags.length) {
 			// update listview
-			$.get('/byTags/' + tags.join('+'), updateList);
+			$.get('/items/tags/' + tags.join('+'), updateList);
 		}
 	}
 
