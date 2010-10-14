@@ -2,7 +2,7 @@ require('./config/env')
 // couldn't see orm from inside env.js ... surely there's a way to push it out through exports
 var orm = require('/home/sandbox/checkouts/biggie-orm/lib/orm')
 
-var a = orm.connect();
+var redisClient = orm.connect();
 
 
 var Item = orm.model('Item', {
@@ -12,6 +12,7 @@ var Item = orm.model('Item', {
 
 
 get('/', function(req){
+	/*
 	a.set(['testing', 'test'], function() {
 
 		a.get(['testing'], function(error, results) {
@@ -19,11 +20,10 @@ get('/', function(req){
 			req.on_screen('' + results);
 		});
 	});
-	/*
-	{
+	*/
+	return {
 		template: 'index'
 	}
-	*/
 })
 
 get('/save', function(req) {
@@ -33,12 +33,12 @@ get('/save', function(req) {
 	a.save(function(error,model) {
 		if(error) return 'shit';
 
-		return model.title;
-		
+		redisClient.quit();
+		req.on_screen(model.title);
 	});
 })
-get('/items', function(req, res) {
-	var items = Item.find().all();
-
-	return JSON.stringify(items);
+get('/items', function(req) {
+	Item.find({title:'Hey'}),all(function(items) {
+		req.on_screen( JSON.stringify(items) );
+	});
 })
