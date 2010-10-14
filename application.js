@@ -6,3 +6,10 @@ get('/', function(req, res){
 	}
 })
 
+get('/items', function(req, res) {
+	var items = [
+		{title: 'Hey',body:'Testing',tags:['a','b']}
+	];
+
+	return JSON.stringify(items);
+})
