@@ -57,6 +57,7 @@ get('/items', function(req) {
 			// need to create extra closure?
 			var m = redis.multi();
 			var items = [];
+			console.log(items.length);
 			for (var i = 0; i < result.length; i++) {
 				var parts = result[i].toString().split(':');
 				var id = parts[1];
@@ -66,9 +67,10 @@ get('/items', function(req) {
 					m.get(result[i].toString(), function(error, result) {
 						if (result) {
 							if (!items[id]) {
-								items[id] = {}
+								items[id] = {};
 							}
 							items[ id ][ field ] = result.toString();
+							console.log('add');
 						}
 					});
 				}
@@ -80,6 +82,7 @@ get('/items', function(req) {
 					req.on_screen('[]');
 					return;
 				}
+				items.shift(); // since ids start at 1
 				req.on_screen( JSON.stringify(items) );
 			});
 		});
