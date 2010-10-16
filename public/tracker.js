@@ -2,16 +2,19 @@ $(setup);
 function setup() {
 	$(document).delegate('#tags a', 'click', onTagClick);
 	$(document).delegate('a', 'click', onLinkClick);	
+	$(document).delegate('form', 'submit', onSubmit);
+	$(document).delegate('article header', 'click', onHeaderClick);
 
 	// pull!
 	$.get('/items', updateList, 'json');
+	$.get('/tags', updateTags, 'json');
 }
 
 function updateList(json) {
 	var html = '';
 	for (var i = 0; i < json.length; i++) {
 		var item = json[ i ];
-		html += '<article><header>' + item.title + '</header><div>' + item.body + '</div></article>';
+		html += '<article rel="' + item.id + '"><header>' + item.title + '</header><summary>' + item.body + '</summary></article>';
 	}
 	$('#items').html(html);
 }
@@ -25,6 +28,9 @@ function updateTags(json) {
 	$('#tags').html(html);
 }
 
+function onHeaderClick() {
+	
+}
 function onTagClick() {
 	var $el = $(this);
 	var href = $el.attr('href');
@@ -49,5 +55,23 @@ function onTagClick() {
 	return false;
 }
 function onLinkClick() {
+	return false;
+}
+function onSubmit() {
+	var $form = $(this);
+
+	if ($form.hasClass('editing')) {
+		$form.find('#method').val('put');
+	}
+
+	$.post(
+		$form.attr('action'),
+		$form.serializeArray(),
+		function(json) {
+			$.get('/items', updateList, 'json');
+		},
+		'json'
+	);
+
 	return false;
 }

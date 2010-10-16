@@ -1,8 +1,61 @@
+html,body {
+	margin:0;
+	padding:0;
+}
+article,header,summary,div {
+	display: block;
+}
 a.selected {
 	background-color: #afafaf;
 }
 
 article {
+	margin-bottom: 10px;
+}
+header {
+	font-size: 14pt;
 }
 summary {
+	
+}
+
+#date {
+	width: 20%;
+}
+#main {
+	width: 50%;
+}
+#tags {
+	width: 30%;
+}
+
+#date, #main, #tags {
+	height: 400px;
+}
+
+
+.clear {
+	clear: both;
+}
+
+.centered {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.quarter {
+	width: 25%;
+}
+.half {
+	width: 50%;
+}
+.threeQuarter {
+	width: 75%;
+}
+
+.left {
+	float: left;
+}
+.right {
+	float: right;
 }

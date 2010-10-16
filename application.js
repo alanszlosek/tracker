@@ -27,25 +27,35 @@ get('/', function(req){
 	}
 });
 
-get('/save', function(req) {
-/*
-	redis.transaction(function() {
-		redis.incr('ids.item', function(error, result) {
-			if (error) throw error;
-			req.on_screen('' + result);
+post('/item', function(params) {
+	var item = {
+		title: params.title,
+		body: params.body
+	}
+	//var tags = params.tags.split(',').trim();
+
+	redis.incr('item.id', function(error, result) {
+		var id = result.toString();
+		var multi = redis.multi();
+		for (var i in item) {
+			multi.set('item:' + id + ':' + i, item[i]);
+		}
+		multi.exec(function(error, result) {
+			if (error) {
+				redis.decr('item.id', function(error, result) {
+					params.on_screen('{success:false}');
+				});
+			}
+			if (result) {
+				params.on_screen( JSON.stringify({success:true, id: id}));
+			}
 		});
-	});
-*/
-	var a = new Item({title:'Title',body:'Body text'});
-	a.save(function(error, model) {
-		if (error) return;
-		req.on_screen(model.title);
 	});
 });
 get('/items', function(req) {
 	var params = req.parsed_url().query;
 
-	if (params.length) {
+	if (params) {
 	} else {
 		// all!
 		// get most recent
@@ -57,26 +67,29 @@ get('/items', function(req) {
 			// need to create extra closure?
 			var m = redis.multi();
 			var items = [];
-			console.log(items.length);
+			//console.log(items.length);
 			for (var i = 0; i < result.length; i++) {
 				var parts = result[i].toString().split(':');
 				var id = parts[1];
 				var field = parts[2];
 				
+				// create new closure so id and field are re-defined with each iteration of the result loop
 				var a = function(id, field) {
+					// once the multi is exec'd, these callbacks will fire
 					m.get(result[i].toString(), function(error, result) {
 						if (result) {
 							if (!items[id]) {
 								items[id] = {};
 							}
 							items[ id ][ field ] = result.toString();
-							console.log('add');
+							//console.log('add');
 						}
 					});
 				}
 				a(id, field);
 			}
 			
+			// this should fire after all queued statement callbacks have
 			m.exec(function(error, result) {
 				if (error || !result) {
 					req.on_screen('[]');
