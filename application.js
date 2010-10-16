@@ -1,17 +1,16 @@
 require('./config/env')
-var sys = require("sys"),
-    redislib = require("./lib/redis-client"),
-    redis = redislib.createClient(),
-    redis2json = require("./lib/redis2json");
-
-redis2json.redis = redis;
+var redisModule = require("redis"),
+	redis = redisModule.createClient();
 
 var Item = {
-	title: "item:{id}:title",
-	body: "item:{id}:body"
+	title: '',
+	body: '',
+	tags: []
 }
 
-
+process.on('exit', function() {
+	redis.quit();
+});
 
 get('/', function(req){
 	/*
@@ -26,21 +25,63 @@ get('/', function(req){
 	return {
 		template: 'index'
 	}
-})
+});
 
 get('/save', function(req) {
-	Item.clear();
-	var a = new Item({title: 'Hey',body:'Testing'});
-	var out = '';
-	a.save(function(error,model) {
-		if(error) return 'shit';
-
-		redisClient.quit();
+/*
+	redis.transaction(function() {
+		redis.incr('ids.item', function(error, result) {
+			if (error) throw error;
+			req.on_screen('' + result);
+		});
+	});
+*/
+	var a = new Item({title:'Title',body:'Body text'});
+	a.save(function(error, model) {
+		if (error) return;
 		req.on_screen(model.title);
 	});
-})
+});
 get('/items', function(req) {
-	redis2json.load(map, {}, function(error, result) {
-		req.on_screen( JSON.stringify(result) );
-	});
-})
+	var params = req.parsed_url().query;
+
+	if (params.length) {
+	} else {
+		// all!
+		// get most recent
+		redis.keys('item:*', function(error, result) {
+			if (error || !result) {
+				req.on_screen('[]');
+				return;
+			}
+			// need to create extra closure?
+			var m = redis.multi();
+			var items = [];
+			for (var i = 0; i < result.length; i++) {
+				var parts = result[i].toString().split(':');
+				var id = parts[1];
+				var field = parts[2];
+				
+				var a = function(id, field) {
+					m.get(result[i].toString(), function(error, result) {
+						if (result) {
+							if (!items[id]) {
+								items[id] = {}
+							}
+							items[ id ][ field ] = result.toString();
+						}
+					});
+				}
+				a(id, field);
+			}
+			
+			m.exec(function(error, result) {
+				if (error || !result) {
+					req.on_screen('[]');
+					return;
+				}
+				req.on_screen( JSON.stringify(items) );
+			});
+		});
+	}
+});
