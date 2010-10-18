@@ -17,17 +17,6 @@
     .left#date
     .left#main
       #items
-      %form(method='post' action='/item')
-        %input(type='hidden' name='_method' id='method' value='post')
-        Title
-        %br
-        %input(type='text' name='title')
-        %br
-        %br
-        Body
-        %br
-        %textarea(name='body')
-        %br
-        %br
-        %input(type='submit')
+      = partial('form')
     .right#tags
+    %br.clear

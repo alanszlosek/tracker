@@ -1,6 +1,8 @@
 html,body {
 	margin:0;
 	padding:0;
+	font-family: Helvetica;
+	font-size: 12pt;
 }
 article,header,summary,div {
 	display: block;
@@ -10,13 +12,24 @@ a.selected {
 }
 
 article {
-	margin-bottom: 10px;
+	margin-bottom: 15px;
 }
 header {
-	font-size: 14pt;
+	font-size: 16pt;
+	line-height: 20pt;
 }
 summary {
 	
+}
+input, button {
+	line-height: 14pt;
+}
+input, textarea {
+	display: block;
+	width: 70%;
+	margin-bottom: 10px;
+}
+textarea {
 }
 
 #date {
@@ -31,6 +44,9 @@ summary {
 
 #date, #main, #tags {
 	height: 400px;
+}
+#date, #tags {
+	background-color: #afafaf;
 }
 
 

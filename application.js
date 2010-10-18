@@ -27,18 +27,55 @@ get('/', function(req){
 	}
 });
 
+// edit item
+post('/item/:id', function(params) {
+	var item = {
+		title: params.title,
+		body: params.body
+	}
+	var tags = params.tags.split(',');
+
+	var id = params.id;
+	var multi = redis.multi();
+	for (var i in item) {
+		multi.set('item:' + id + ':' + i, item[i]);
+	}
+	// find existing, clear
+	for (var i = 0; i < tags.length; i++) {
+		var tag = tags[i].trim();
+		multi.sadd('tag:' + tag + ':items', id);
+		multi.sadd('item:' + id + ':tags', tag);
+	}
+	multi.exec(function(error, result) {
+		if (error) {
+			redis.decr('item.id', function(error, result) {
+				params.on_screen('{success:false}');
+			});
+		}
+		if (result) {
+			params.on_screen( JSON.stringify({success:true, id: id}));
+		}
+	});
+});
+
+// new item
 post('/item', function(params) {
 	var item = {
 		title: params.title,
 		body: params.body
 	}
-	//var tags = params.tags.split(',').trim();
+	var tags = params.tags.split(',');
 
 	redis.incr('item.id', function(error, result) {
 		var id = result.toString();
 		var multi = redis.multi();
 		for (var i in item) {
 			multi.set('item:' + id + ':' + i, item[i]);
+		}
+		for (var i = 0; i < tags.length; i++) {
+			var tag = tags[i].trim();
+			multi.sadd('tag:' + tag + ':items', id);
+			multi.sadd('item:' + id + ':tags', tag);
 		}
 		multi.exec(function(error, result) {
 			if (error) {
@@ -52,6 +89,7 @@ post('/item', function(params) {
 		});
 	});
 });
+
 get('/items', function(req) {
 	var params = req.parsed_url().query;
 
@@ -79,14 +117,27 @@ get('/items', function(req) {
 					m.get(result[i].toString(), function(error, result) {
 						if (result) {
 							if (!items[id]) {
-								items[id] = {};
+								items[id] = {id: id};
 							}
 							items[ id ][ field ] = result.toString();
-							//console.log('add');
 						}
 					});
 				}
-				a(id, field);
+				var b = function(id, field) {
+					// once the multi is exec'd, these callbacks will fire
+					m.smembers(result[i].toString(), function(error, result) {
+						if (result) {
+							if (!items[id]) {
+								items[id] = {id: id};
+							}
+							items[ id ][ field ] = result.toString().split(/,/);
+						}
+					});
+				}
+				if (field == 'tags')
+					b(id, field);
+				else
+					a(id, field);
 			}
 			
 			// this should fire after all queued statement callbacks have
@@ -99,5 +150,27 @@ get('/items', function(req) {
 				req.on_screen( JSON.stringify(items) );
 			});
 		});
+	}
+});
+
+get('/tags', function(req) {
+	redis.keys('tag:*:item', function(error, result) {
+		if (error || !result) {
+			req.on_screen('[a]');
+			return;
+		}
+		var tags = [];
+		for (var i = 0; i < result.length; i++) {
+			var parts = result[i].toString().split(':');
+			tags.push( parts[1] );
+			
+		}
+		req.on_screen( JSON.stringify(tags) );
+	});
+});
+
+get('/form', function() {
+	return {
+		template: 'form'
 	}
 });
