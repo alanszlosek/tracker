@@ -12,6 +12,47 @@ process.on('exit', function() {
 	redis.quit();
 });
 
+var toString = function(a) { return a.toString(); };
+
+var hashObjects = function(ids, prefix, callback) {
+	// need to create extra closure?
+	var m = redis.multi();
+	var items = [];
+	var len = ids.length;
+	//console.log(len);
+	while (ids.length) {
+		var id = ids.shift();
+		
+		// create new closure so id and field are re-defined with each iteration of the result loop
+		(function(id) {
+			// once the multi is exec'd, these callbacks will fire
+			m.hgetall(prefix + id, function(error, result) {
+				if (error || !result) {
+					return;
+				}
+				var item = {id:id};
+				for (var key in result) {
+					item[ key ] = result[key].toString();
+				}
+				items.push(item);
+				//len--;
+				//check();
+			});
+		})(id);
+	}
+	var check = function() {
+		if (len == 0) callback(items);
+	};
+	m.exec(function(error, result) {
+		items.sort(function(a, b) {
+			if (a.id < b.id) return -1;
+			else if (a.id > b.id) return 1;
+			else return 0;
+		});
+		if (!error) callback(items);
+	});
+};
+
 get('/', function(req){
 	/*
 	a.set(['testing', 'test'], function() {
@@ -27,6 +68,17 @@ get('/', function(req){
 	}
 });
 
+get('/date', function(req) {
+	req.on_screen(Date.now().toString());
+});
+get('/test', function(req) {
+	var a = new Array();
+	a.push(123);
+	a.push(444);
+	var b = a.map(toString);
+	req.on_screen( b.join(',') );
+});
+
 // edit item
 post('/item/:id', function(params) {
 	var item = {
@@ -38,7 +90,7 @@ post('/item/:id', function(params) {
 	var id = params.id;
 	var multi = redis.multi();
 	for (var i in item) {
-		multi.set('item:' + id + ':' + i, item[i]);
+		multi.hset('item:' + id, i, item[i]);
 	}
 	// find existing, clear
 	for (var i = 0; i < tags.length; i++) {
@@ -67,16 +119,20 @@ post('/item', function(params) {
 	var tags = params.tags.split(',');
 
 	redis.incr('item.id', function(error, result) {
-		var id = result.toString();
+		var id = Date.now().toString();
 		var multi = redis.multi();
 		for (var i in item) {
-			multi.set('item:' + id + ':' + i, item[i]);
+			multi.hset('item:' + id, i, item[i]);
 		}
+		// tags
 		for (var i = 0; i < tags.length; i++) {
 			var tag = tags[i].trim();
 			multi.sadd('tag:' + tag + ':items', id);
 			multi.sadd('item:' + id + ':tags', tag);
 		}
+		// sorted set for ordering
+		// in case we move away from timestamp for item id, 
+		multi.zadd('items:createdAt', id, id);
 		multi.exec(function(error, result) {
 			if (error) {
 				redis.decr('item.id', function(error, result) {
@@ -97,56 +153,15 @@ get('/items', function(req) {
 	} else {
 		// all!
 		// get most recent
-		redis.keys('item:*', function(error, result) {
+		redis.zrevrange('items:createdAt', -10, 10, function(error, result) {
 			if (error || !result) {
 				req.on_screen('[]');
 				return;
 			}
-			// need to create extra closure?
-			var m = redis.multi();
-			var items = [];
-			//console.log(items.length);
-			for (var i = 0; i < result.length; i++) {
-				var parts = result[i].toString().split(':');
-				var id = parts[1];
-				var field = parts[2];
+
+			hashObjects(result.map(toString), 'item:', function(items) {
+				// sort
 				
-				// create new closure so id and field are re-defined with each iteration of the result loop
-				var a = function(id, field) {
-					// once the multi is exec'd, these callbacks will fire
-					m.get(result[i].toString(), function(error, result) {
-						if (result) {
-							if (!items[id]) {
-								items[id] = {id: id};
-							}
-							items[ id ][ field ] = result.toString();
-						}
-					});
-				}
-				var b = function(id, field) {
-					// once the multi is exec'd, these callbacks will fire
-					m.smembers(result[i].toString(), function(error, result) {
-						if (result) {
-							if (!items[id]) {
-								items[id] = {id: id};
-							}
-							items[ id ][ field ] = result.toString().split(/,/);
-						}
-					});
-				}
-				if (field == 'tags')
-					b(id, field);
-				else
-					a(id, field);
-			}
-			
-			// this should fire after all queued statement callbacks have
-			m.exec(function(error, result) {
-				if (error || !result) {
-					req.on_screen('[]');
-					return;
-				}
-				items.shift(); // since ids start at 1
 				req.on_screen( JSON.stringify(items) );
 			});
 		});
