@@ -3,7 +3,14 @@ Notes
 
 Planning to use Redis for data storage.
 
-LEFT
+TODO
+====
+
+* finish tag assignment
+* clean up appearance
+* import script: 2MB sqlite2 database to redis
+
+BYE BYE
 ====
 
 Moved to redis2json because I couldn't save or pull with biggie-orm. Fought with it long-enough. Couldn't figure it out.
