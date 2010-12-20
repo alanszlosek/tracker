@@ -5,10 +5,14 @@ $(setup);
 function setup() {
 	$(document).delegate('#tags a', 'click', onTagClick);
 	$(document).delegate('form', 'submit', returnFalse);
-	$(document).delegate('a', 'click', onLinkClick);	
+	//$(document).delegate('a', 'click', onLinkClick);	
 	$(document).delegate('article header', 'click', onHeaderClick);
 	$(document).delegate('button.cancel', 'click', onCancelClick);
 	$(document).delegate('button.submit', 'click', onSubmitClick);
+	$(document).delegate('#newTag button', 'click', onTagSubmit);
+
+
+	$('#items').delegate('article', 'click', function() { $(this).closest('article').toggleClass('selected'); });
 
 	// pull!
 	$.get('/items', updateList, 'json');
@@ -29,9 +33,15 @@ function updateTags(json) {
 	for (var i = 0; i < json.length; i++) {
 		var tag = json[ i ];
 		//html += '<a href="#" rel="' + tag + '" style="font-size: ' + (startingSize + (a*2)) + 'px">' + tag + '</a> ';
-		html += '<a href="#" rel="' + tag + '">' + tag + '</a> ';
+		html += '<a href="#" rel="' + tag.id + '">' + tag.name + '</a> ';
 	}
 	$('#tags').html(html);
+}
+function updateArticleTags(json) {
+	for (var i in json) {
+		var tags = json[i];
+		$('tags[rel=' + i + ']').html( tags.join(', ') );
+	}
 }
 
 function onHeaderClick() {
@@ -52,9 +62,20 @@ function onHeaderClick() {
 function onTagClick() {
 	var $el = $(this);
 	var href = $el.attr('href');
+	var tag = $el.attr('rel');
+	var $selected = $('article.selected');
 	// what state are we in?
 	// filter by tag, or add/remove tag from item we're editing?
-	if(1) { // filtering
+	if($selected.length) {
+		var ids = $.map($selected, function(el) { return $(el).attr('rel'); });
+		if ($el.hasClass('selected')) {
+			$.post('/items/' + ids.join(',') + '/untag/' + tag, updateArticleTags, 'json');
+			$el.removeClass('selected');
+		} else {
+			$.post('/items/' + ids.join(',') + '/tag/' + tag, updateArticleTags, 'json');
+			$el.addClass('selected');
+		}
+	} else { // filtering
 		if ($el.hasClass('selected')) {
 			$el.removeClass('selected');
 		} else {
@@ -109,5 +130,27 @@ function onCancelClick() {
 		$form.prev().show();
 		$form.remove();
 	}
+	return false;
+}
+function onTagSubmit() {
+	var $form = $(this).closest('form');
+
+	$.post(
+		'/tag',
+		$form.serializeArray(),
+		function(json) {
+			if (json.success == true) {
+				/*
+				if ('id' in json) {
+				} else {
+				*/
+				//}
+			} else {
+			}
+			$.get('/tags', updateTags, 'json');
+		},
+		'json'
+	);
+
 	return false;
 }

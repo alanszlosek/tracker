@@ -32,17 +32,21 @@ input, textarea {
 textarea {
 }
 
+article.selected {
+	background-color: #fff5ee;
+}
+
 #date {
 	width: 20%;
 }
 #main {
 	width: 50%;
 }
-#tags {
+.tags {
 	width: 30%;
 }
 
-#date, #main, #tags {
+#date, #main {
 	height: 400px;
 }
 #date, #tags {

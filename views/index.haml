@@ -15,8 +15,17 @@
       %a(href='/today') Today's Items
     %br.clear
     .left#date
+      Filter by Date
     .left#main
+      #filters
+        %a(href='/') Clear selection
       #items
       = partial('form')
-    .right#tags
+    .right.tags
+      #tags
+      #newTag
+        %form(method='post')
+          %input(name='name')
+          %button(type='submit') Save
+
     %br.clear

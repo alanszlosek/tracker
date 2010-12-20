@@ -9,6 +9,14 @@ TODO
 * finish tag assignment
 * clean up appearance
 * import script: 2MB sqlite2 database to redis
+* ability to click and select multiple items
+	* then can tag/untag multiple at once
+
+When click Edit for an item:
+- change background
+- clicking tags adds/removes on the fly
+
+Can 
 
 BYE BYE
 ====
