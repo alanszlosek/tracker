@@ -1,6 +1,7 @@
-require('./config/env')
+require('./config/env');
 var redisModule = require("redis"),
 	redis = redisModule.createClient();
+var async = require('./lib/async');
 
 var Item = {
 	title: '',
@@ -212,6 +213,7 @@ post('/items/:ids/tag/:tag', function(req) {
 	var ids = req.ids.split(',');
 	var multi = redis.multi();
 	var tag = req.tag;
+	if (ids.length == 0) return req.on_screen('{}');;
 	for (var i = 0; i < ids.length; i++) {
 		var id = ids[i];
 		multi.sadd('tag-to-items:' + tag, id);
@@ -219,11 +221,43 @@ post('/items/:ids/tag/:tag', function(req) {
 	}
 	multi.exec(function(error, result) {
 		if (error) {
-			req.on_screen('{success:false}');
+			req.on_screen('{}');
 			return;
 		}
 		if (result) {
-			req.on_screen( JSON.stringify({success:true, id: id}));
+			var items = {};
+			var series = [];
+			for (var i = 0; i < ids.length; i++) {
+				var id = ids[i];
+				multi.smembers(
+					'item-to-tags:' + id,
+					function(id) {
+						return function(error, result) {
+							if (error) throw new Error(error);
+							if (!result) return;
+							series.push(function(callback) {
+								hashObjects(
+									result.filter(notNull).map(toString),
+									'tag:',
+									function(tags) {
+										items[ id ] = tags;
+										callback();
+									}
+								);
+							});
+						};
+					}(id)
+				);
+			}
+			if (ids.length == 0) return req.on_screen(items);
+			multi.exec(function(error, ready) {
+				if (error) throw new Error(error);
+
+				async.series(series, function() {
+					console.log( JSON.stringify(items));
+					req.on_screen( JSON.stringify(items) );
+				});
+			});
 		}
 	});
 });

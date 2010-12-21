@@ -40,7 +40,10 @@ function updateTags(json) {
 function updateArticleTags(json) {
 	for (var i in json) {
 		var tags = json[i];
-		$('tags[rel=' + i + ']').html( tags.join(', ') );
+		var html = tags.map(function(a) {
+			return a.name;
+		}).join(', ');
+		$('article[rel=' + i + '] details').html(html);
 	}
 }
 
