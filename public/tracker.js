@@ -23,7 +23,10 @@ function updateList(json) {
 	var html = '';
 	for (var i = 0; i < json.length; i++) {
 		var item = json[ i ];
-		html += '<article rel="' + item.id + '"><header>' + item.title + '</header><summary>' + item.body + '</summary><details>' + (item.tags ? item.tags.join(', ') : '') + '</details></article><hr />';
+		html += '<article rel="' + item.id + '"><header>' + item.title + '</header><summary>' + item.body + '</summary><details>';
+		html += item.tags.map(function(tag) {
+			return '<a href="#" rel="' + tag.id + '">' + tag.name + '</a> ';
+		}).join(', ');
 	}
 	$('#items').html(html);
 }

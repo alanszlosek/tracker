@@ -53,6 +53,18 @@ article.selected {
 	background-color: #afafaf;
 }
 
+/*
+#tags a {
+	display: block;
+	float: left;
+	margin-right: 10px; margin-bottom: 10px;
+}
+*/
+
+#newTag {
+	clear: both;
+}
+
 
 .clear {
 	clear: both;
