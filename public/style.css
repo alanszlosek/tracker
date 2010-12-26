@@ -7,9 +7,6 @@ html,body {
 article,header,summary,div {
 	display: block;
 }
-a.selected {
-	background-color: #afafaf;
-}
 
 article {
 	margin-bottom: 15px;
@@ -50,7 +47,14 @@ article.selected {
 	height: 400px;
 }
 #date, #tags {
+/*
 	background-color: #afafaf;
+*/
+	background-color: #f0f4f8;
+}
+
+#tags a.selected {
+	background-color: #dcdcdc;
 }
 
 /*

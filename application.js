@@ -61,27 +61,76 @@ function addTagsToItems(items, whew) {
 	var multi = redis.multi();
 	for (var i = 0; i < len; i++) {
 		var id = items[i].id;
+console.log(id);
 		multi.smembers(
 			'item-to-tags:' + id,
-			function(i, id) {
+			(function(i, id) {
 				return function(error, result) {
+					console.log(result.filter(notNull).map(toString).join(', '));
 					if (error) throw new Error(error);
-					if (!result) return;
-					series.push(function(callback) {
-						hashObjects(
-							result.filter(notNull).map(toString),
-							'tag:',
-							function(tags) {
-								items[ i ]['tags'] = tags;
-								callback();
-							}
-						);
-					});
+					result = result.filter(notNull);
+					if (result.length) {
+						series.push(function(callback) {
+							hashObjects(
+								result.filter(notNull).map(toString),
+								'tag:',
+								function(tags) {
+									items[ i ]['tags'] = tags;
+									callback();
+								}
+							);
+						});
+					} else { console.log('notags');
+						series.push(function(callback) {
+							items[ i ]['tags'] = [];
+							callback();
+						});
+					}
 				};
-			}(i, id)
+			})(i, id)
 		);
 	}
-	if (len == 0) return items;
+	if (len == 0) return;
+	multi.exec(function(error, ready) {
+		if (error) throw new Error(error);
+
+		async.series(series, function() {
+console.log(items.length);
+			whew(items);
+		});
+	});
+}
+
+function getItemTags(ids, whew) {
+	var items = {};
+	var series = [];
+	var multi = redis.multi();
+	for (var i = 0; i < ids.length; i++) {
+		var id = ids[i];
+		multi.smembers(
+			'item-to-tags:' + id,
+			function(id) {
+				return function(error, result) {
+					if (error) throw new Error(error);
+					result = result.filter(notNull);
+					if (result.length)
+						series.push(function(callback) {
+							hashObjects(
+								result.filter(notNull).map(toString),
+								'tag:',
+								function(tags) {
+									items[ id ] = tags;
+									callback();
+								}
+							);
+						});
+					else
+						items[ id ] = [];
+				};
+			}(id)
+		);
+	}
+	if (ids.length == 0) return req.on_screen(items);
 	multi.exec(function(error, ready) {
 		if (error) throw new Error(error);
 
@@ -89,6 +138,7 @@ function addTagsToItems(items, whew) {
 			whew(items);
 		});
 	});
+
 }
 
 
@@ -144,6 +194,23 @@ get('/items', function(req) {
 });
 
 get('/tags', function(req) {
+	redis.keys('tag:*', function(error, result) {
+		if (error) throw new Error(error);
+		if (!result) return req.on_screen('[]');
+		var tags = result.map(function(key) {
+			console.log(key.toString());
+			var parts = key.toString().split(':');
+			return parts[1];
+		});
+		console.log(tags.join(','));
+		hashObjects(tags, 'tag:', function(items) {
+			req.on_screen( JSON.stringify(items) );
+		});
+	});
+});
+
+get('/items/:ids/tags', function(req) {
+	var ids = req.ids.split(',');
 	redis.keys('tag:*', function(error, result) {
 		if (error) throw new Error(error);
 		if (!result) return req.on_screen('[]');
@@ -246,39 +313,31 @@ post('/items/:ids/tag/:tag', function(req) {
 			return;
 		}
 		if (result) {
+			getItemTags(ids, function(tags) {
+				req.on_screen( JSON.stringify(tags) );
+			});
+		}
+	});
+});
 
-			var items = {};
-			var series = [];
-			for (var i = 0; i < ids.length; i++) {
-				var id = ids[i];
-				multi.smembers(
-					'item-to-tags:' + id,
-					function(id) {
-						return function(error, result) {
-							if (error) throw new Error(error);
-							if (!result) return;
-							series.push(function(callback) {
-								hashObjects(
-									result.filter(notNull).map(toString),
-									'tag:',
-									function(tags) {
-										items[ id ] = tags;
-										callback();
-									}
-								);
-							});
-						};
-					}(id)
-				);
-			}
-			if (ids.length == 0) return req.on_screen(items);
-			multi.exec(function(error, ready) {
-				if (error) throw new Error(error);
-
-				async.series(series, function() {
-					console.log( JSON.stringify(items));
-					req.on_screen( JSON.stringify(items) );
-				});
+post('/items/:ids/untag/:tag', function(req) {
+	var ids = req.ids.split(',');
+	var multi = redis.multi();
+	var tag = req.tag;
+	if (ids.length == 0) return req.on_screen('{}');;
+	for (var i = 0; i < ids.length; i++) {
+		var id = ids[i];
+		multi.srem('tag-to-items:' + tag, id);
+		multi.srem('item-to-tags:' + id, tag);
+	}
+	multi.exec(function(error, result) {
+		if (error) {
+			req.on_screen('{}');
+			return;
+		}
+		if (result) {
+			getItemTags(ids, function(tags) {
+				req.on_screen( JSON.stringify(tags) );
 			});
 		}
 	});

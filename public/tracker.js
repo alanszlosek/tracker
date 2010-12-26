@@ -12,7 +12,7 @@ function setup() {
 	$(document).delegate('#newTag button', 'click', onTagSubmit);
 
 
-	$('#items').delegate('article', 'click', function() { $(this).closest('article').toggleClass('selected'); });
+	$('#items').delegate('article', 'click', onItemClick);
 
 	// pull!
 	$.get('/items', updateList, 'json');
@@ -25,7 +25,7 @@ function updateList(json) {
 		var item = json[ i ];
 		html += '<article rel="' + item.id + '"><header>' + item.title + '</header><summary>' + item.body + '</summary><details>';
 		html += item.tags.map(function(tag) {
-			return '<a href="#" rel="' + tag.id + '">' + tag.name + '</a> ';
+			return '<a href="#" rel="' + tag.id + '">' + tag.name + '</a>';
 		}).join(', ');
 	}
 	$('#items').html(html);
@@ -43,8 +43,8 @@ function updateTags(json) {
 function updateArticleTags(json) {
 	for (var i in json) {
 		var tags = json[i];
-		var html = tags.map(function(a) {
-			return a.name;
+		var html = tags.map(function(tag) {
+			return '<a href="#" rel="' + tag.id + '">' + tag.name + '</a>';
 		}).join(', ');
 		$('article[rel=' + i + '] details').html(html);
 	}
@@ -64,6 +64,23 @@ function onHeaderClick() {
 			$form.find('textarea').val($el.find('summary').html());
 		}
 	);
+}
+function onItemClick() {
+	var $article = $(this);
+	var $articleTags = $article.find('details a');
+	var $tags = $('#tags');
+	// select tags found in this item
+	if ($article.hasClass('selected')) {
+		$article.removeClass('selected');
+		$articleTags.each(function() {
+			$tags.find('[rel=' + $(this).attr('rel') + ']').removeClass('selected');
+		});
+	} else {
+		$article.addClass('selected');
+		$articleTags.each(function() {
+			$tags.find('[rel=' + $(this).attr('rel') + ']').addClass('selected');
+		});
+	}
 }
 function onTagClick() {
 	var $el = $(this);
@@ -146,6 +163,7 @@ function onTagSubmit() {
 		$form.serializeArray(),
 		function(json) {
 			if (json.success == true) {
+				$form.find('input').val('');
 				/*
 				if ('id' in json) {
 				} else {
