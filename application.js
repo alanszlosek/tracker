@@ -176,7 +176,7 @@ get('/items', function(req) {
 	} else {
 		// all!
 		// get most recent
-		redis.zrevrange('items.createdAt', -10, 10, function(error, result) {
+		redis.zrevrange('items.createdAt', 0, 5, function(error, result) {
 			if (error || !result) {
 				req.on_screen('[]');
 				return;
