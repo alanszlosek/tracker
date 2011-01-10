@@ -24,9 +24,12 @@ function updateList(json) {
 	for (var i = 0; i < json.length; i++) {
 		var item = json[ i ];
 		html += '<article rel="' + item.id + '"><header>' + item.title + '</header><summary>' + item.body + '</summary><details>';
-		html += item.tags.map(function(tag) {
-			return '<a href="#" rel="' + tag.id + '">' + tag.name + '</a>';
-		}).join(', ');
+		if (item.tags) {
+			html += item.tags.map(function(tag) {
+				return '<a href="#" rel="' + tag.id + '">' + tag.name + '</a>';
+			}).join(', ');
+		}
+		html += '</details></article>';
 	}
 	$('#items').html(html);
 }
@@ -110,8 +113,9 @@ function onTagClick() {
 		});
 		if (tags.length) {
 			// update listview
-			$.get('/items/tags/' + tags.join('+'), updateList);
-		}
+			$.get('/items-by-tags/' + tags.join(','), updateList, 'json');
+		} else
+			$.get('/items', updateList, 'json');
 	}
 
 	return false;

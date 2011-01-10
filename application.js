@@ -21,13 +21,12 @@ var hashObjects = function(ids, prefix, callback) {
 	var m = redis.multi();
 	var items = [];
 	var len = ids.length;
-	if (len == 0) return items;
 	//console.log(len);
-	while (ids.length) {
-		var id = ids.shift();
+	for (var i = 0; i < len; i++) {
+		var id = ids[ i ] ;
 		
 		// create new closure so id and field are re-defined with each iteration of the result loop
-		(function(id) {
+		(function(id, i) {
 			// once the multi is exec'd, these callbacks will fire
 			m.hgetall(prefix + id, function(error, result) {
 				if (error) throw new Error(error);
@@ -35,22 +34,25 @@ var hashObjects = function(ids, prefix, callback) {
 				for (var key in result) {
 					item[ key ] = result[key].toString();
 				}
-				items.push(item);
+				items[ i ] = item;
 				//len--;
 				//check();
 			});
-		})(id);
+		})(id, i);
 	}
 	//var check = function() {
 	if (len == 0) callback(items);
 	//};
 	m.exec(function(error, result) {
 		if (error) throw new Error(error);
+// don't sort because the ids should have been passed in the order of the output
+/*
 		items.sort(function(a, b) {
 			if (a.id < b.id) return -1;
 			else if (a.id > b.id) return 1;
 			else return 0;
 		});
+*/
 		if (!error) callback(items);
 	});
 };
@@ -61,12 +63,12 @@ function addTagsToItems(items, whew) {
 	var multi = redis.multi();
 	for (var i = 0; i < len; i++) {
 		var id = items[i].id;
-console.log(id);
+		//console.log(id);
 		multi.smembers(
 			'item-to-tags:' + id,
 			(function(i, id) {
 				return function(error, result) {
-					console.log(result.filter(notNull).map(toString).join(', '));
+					//console.log(result.filter(notNull).map(toString).join(', '));
 					if (error) throw new Error(error);
 					result = result.filter(notNull);
 					if (result.length) {
@@ -80,7 +82,8 @@ console.log(id);
 								}
 							);
 						});
-					} else { console.log('notags');
+					} else {
+						//console.log('notags');
 						series.push(function(callback) {
 							items[ i ]['tags'] = [];
 							callback();
@@ -95,7 +98,7 @@ console.log(id);
 		if (error) throw new Error(error);
 
 		async.series(series, function() {
-console.log(items.length);
+		//console.log(items.length);
 			whew(items);
 		});
 	});
@@ -183,7 +186,6 @@ get('/items', function(req) {
 			}
 
 			hashObjects(result.map(toString), 'item:', function(items) {
-				// sort
 				// merge in tags
 				addTagsToItems(items, function(items) {
 					req.on_screen( JSON.stringify(items) );
@@ -205,6 +207,22 @@ get('/tags', function(req) {
 		console.log(tags.join(','));
 		hashObjects(tags, 'tag:', function(items) {
 			req.on_screen( JSON.stringify(items) );
+		});
+	});
+});
+
+get('/items-by-tags/:ids', function(req) {
+	var keys = req.ids.split(',').map(function(a) {
+		return 'tag-to-items:' + a;
+	});
+	redis.sinter(keys, function(error, result) {
+		if (error || !result) return req.on_screen('[]');
+		var ids = result.map(toString).splice(0, 5);
+		console.log(ids.join(','));
+		hashObjects(ids, 'item:', function(items) {
+			addTagsToItems(items, function(items) {
+				req.on_screen( JSON.stringify(items) );
+			});
 		});
 	});
 });
