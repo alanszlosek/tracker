@@ -41,7 +41,6 @@ article.selected {
 
 .container {
 	padding: 10px;
-	border: 1px solid black;
 }
 
 .new {
@@ -74,7 +73,7 @@ article.selected {
 #date {
 	height: 400px;
 }
-#date, #tags {
+#date, .items {
 /*
 	background-color: #afafaf;
 */

@@ -92,7 +92,15 @@ function viewItem(item) {
 	$('#item').html(html);
 }
 function editItem(item) {
-	var html = '<form><input type="hidden" name="_method" value="post" /><input type="text" name="title" class="title" value="' + item.title + '" /><textarea name="body">' + item.body + '</textarea><button class="left submit">Submit</button></form><br class="clear" />';
+	var tags = '';
+	if(item.tags) {
+		tags = item.tags.join(' ');
+	}
+	var html = '<form><input type="hidden" name="_method" value="post" />';
+	html += '<input type="text" name="title" class="title" value="' + item.title + '" />';
+	html += '<input type="text" name="tags" class="" value="' + tags + '" />';
+	html += '<textarea name="body">' + item.body + '</textarea>';
+	html += '<button class="left submit">Submit</button></form><br class="clear" />';
 	$('#item').html(html);
 }
 
@@ -123,6 +131,8 @@ function onTagClick() {
 	var $selected = $('article.selected');
 	// what state are we in?
 	// filter by tag, or add/remove tag from item we're editing?
+
+/*
 	if($selected.length) {
 		var ids = $.map($selected, function(el) { return $(el).attr('rel'); });
 		if ($el.hasClass('selected')) {
@@ -133,6 +143,7 @@ function onTagClick() {
 			$el.addClass('selected');
 		}
 	} else { // filtering
+*/
 		if ($el.hasClass('selected')) {
 			$el.removeClass('selected');
 		} else {
@@ -147,7 +158,7 @@ function onTagClick() {
 			$.get('/items-by-tags/' + tags.join(','), updateList, 'json');
 		} else
 			$.get('/items', updateList, 'json');
-	}
+	//}
 
 	return false;
 }

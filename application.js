@@ -173,26 +173,24 @@ get('/test', function(req) {
 });
 
 get('/items', function(req) {
-	var params = req.parsed_url().query;
+	//var ids = req.ids.split(',');
 
-	if (params) {
-	} else {
-		// all!
-		// get most recent
-		redis.zrevrange('items.createdAt', 0, 5, function(error, result) {
-			if (error || !result) {
-				req.on_screen('[]');
-				return;
-			}
+	// if ids, intersect 
+	// all!
+	// get most recent
+	redis.zrevrange('items.createdAt', 0, 5, function(error, result) {
+		if (error || !result) {
+			req.on_screen('[]');
+			return;
+		}
 
-			hashObjects(result.map(toString), 'item:', function(items) {
-				// merge in tags
-				addTagsToItems(items, function(items) {
-					req.on_screen( JSON.stringify(items) );
-				});
+		hashObjects(result.map(toString), 'item:', function(items) {
+			// merge in tags
+			addTagsToItems(items, function(items) {
+				req.on_screen( JSON.stringify(items) );
 			});
 		});
-	}
+	});
 });
 
 get('/tags', function(req) {
