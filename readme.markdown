@@ -6,6 +6,7 @@ Planning to use Redis for data storage.
 TODO
 ====
 
+* try mihai's redis client ... already downloaded
 * finish tag assignment
 * clean up appearance
 * import script: 2MB sqlite2 database to redis

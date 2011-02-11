@@ -27,10 +27,10 @@ input, textarea {
 	margin-bottom: 10px;
 }
 input[type=text] {
-	width: 100%;
+	width: 98%;
 }
 textarea {
-	width: 100%;
+	width: 98%;
 	height: 150px;
 }
 
@@ -38,17 +38,40 @@ article.selected {
 	background-color: #fff5ee;
 }
 
-#date {
-	width: 19%;
-}
-#main {
-	width: 50%;
-}
-.tags {
-	width: 29%;
+
+.container {
+	padding: 10px;
+	border: 1px solid black;
 }
 
-#date, #main {
+.new {
+	width: 50%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.tags {
+	width: 25%;
+}
+.items {
+	width: 30%;
+	height: 600px;
+	overflow: auto;
+}
+
+.item {
+	width: 45%;
+}
+
+#tags {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+
+
+
+#date {
 	height: 400px;
 }
 #date, #tags {

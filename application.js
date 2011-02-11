@@ -211,6 +211,13 @@ get('/tags', function(req) {
 	});
 });
 
+get('/items/:ids', function(req) {
+	var ids = req.ids.split(',');
+	hashObjects(ids, 'item:', function(items) {
+		req.on_screen( JSON.stringify( items ) );
+	});
+});
+
 get('/items-by-tags/:ids', function(req) {
 	var keys = req.ids.split(',').map(function(a) {
 		return 'tag-to-items:' + a;

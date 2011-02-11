@@ -6,8 +6,8 @@ function setup() {
 	$(document).delegate('#tags a', 'click', onTagClick);
 	$(document).delegate('form', 'submit', returnFalse);
 	//$(document).delegate('a', 'click', onLinkClick);	
-	$(document).delegate('article header', 'click', onHeaderClick);
-	$(document).delegate('button.cancel', 'click', onCancelClick);
+	//$(document).delegate('article header', 'click', onHeaderClick);
+	//$(document).delegate('button.cancel', 'click', onCancelClick);
 	$(document).delegate('button.submit', 'click', onSubmitClick);
 	$(document).delegate('#newTag button', 'click', onTagSubmit);
 
@@ -23,11 +23,11 @@ function updateList(json) {
 	var html = '';
 	for (var i = 0; i < json.length; i++) {
 		var item = json[ i ];
-		html += '<article rel="' + item.id + '"><header>' + item.title + '</header><summary>' + item.body + '</summary><details>';
+		html += '<article rel="' + item.id + '"><header>' + item.title + '</header><details>';
 		if (item.tags) {
 			html += item.tags.map(function(tag) {
 				return '<a href="#" rel="' + tag.id + '">' + tag.name + '</a>';
-			}).join(', ');
+			}).join(' &nbsp; ');
 		}
 		html += '</details></article>';
 	}
@@ -39,7 +39,7 @@ function updateTags(json) {
 	for (var i = 0; i < json.length; i++) {
 		var tag = json[ i ];
 		//html += '<a href="#" rel="' + tag + '" style="font-size: ' + (startingSize + (a*2)) + 'px">' + tag + '</a> ';
-		html += '<a href="#" rel="' + tag.id + '">' + tag.name + '</a> ';
+		html += '<li><a href="#" rel="' + tag.id + '">' + tag.name + '</a></li>';
 	}
 	$('#tags').html(html);
 }
@@ -68,6 +68,35 @@ function onHeaderClick() {
 		}
 	);
 }
+
+function onItemClick() {
+	var $article = $(this);
+	if ($article.hasClass('selected')) { // already been clicked, start editing
+		getItem($article.attr('rel'), editItem);
+
+	} else {
+		$('#items article').removeClass('selected');
+		$article.addClass('selected');
+		getItem($article.attr('rel'), viewItem);
+	}
+}
+
+function getItem(ids, callback) {
+	$.get('/items/' + ids, function(json) {
+		callback(json[0]);
+	},'json');
+}
+
+function viewItem(item) {
+	var html = '<article rel="' + item.id + '"><header>' + item.title + '</header><body>' + item.body + '</body></article>';
+	$('#item').html(html);
+}
+function editItem(item) {
+	var html = '<form><input type="hidden" name="_method" value="post" /><input type="text" name="title" class="title" value="' + item.title + '" /><textarea name="body">' + item.body + '</textarea><button class="left submit">Submit</button></form><br class="clear" />';
+	$('#item').html(html);
+}
+
+/*
 function onItemClick() {
 	var $article = $(this);
 	var $articleTags = $article.find('details a');
@@ -85,7 +114,9 @@ function onItemClick() {
 		});
 	}
 }
+*/
 function onTagClick() {
+	// how can i trigger this with the 'select none' tag link?
 	var $el = $(this);
 	var href = $el.attr('href');
 	var tag = $el.attr('rel');
