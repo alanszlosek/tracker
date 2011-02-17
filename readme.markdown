@@ -6,6 +6,10 @@ Planning to use Redis for data storage.
 TODO
 ====
 
+* save tags
+* parse for hashtags and save them
+* return object on save
+* delete
 * try mihai's redis client ... already downloaded
 * finish tag assignment
 * clean up appearance

@@ -178,7 +178,7 @@ get('/items', function(req) {
 	// if ids, intersect 
 	// all!
 	// get most recent
-	redis.zrevrange('items.createdAt', 0, 5, function(error, result) {
+	redis.zrevrange('items.createdAt', 0, 10, function(error, result) {
 		if (error || !result) {
 			req.onScreen('[]');
 			return;
