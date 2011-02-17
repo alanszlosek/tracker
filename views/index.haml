@@ -10,8 +10,10 @@
     %link(rel='stylesheet' href='style.css')
   %body
     .new
-      %form(method='post')
-        %input(type='text' name='search')
+      %form
+        %input(type='hidden' name='body' value='')
+        %input(type='text' name='title' id='title')
+        %button(class='submit') Create
 
     .left.tags
       .container

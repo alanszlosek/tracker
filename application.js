@@ -133,7 +133,7 @@ function getItemTags(ids, whew) {
 			}(id)
 		);
 	}
-	if (ids.length == 0) return req.on_screen(items);
+	if (ids.length == 0) return req.onScreen(items);
 	multi.exec(function(error, ready) {
 		if (error) throw new Error(error);
 
@@ -162,14 +162,14 @@ get('/', function(req){
 });
 
 get('/date', function(req) {
-	req.on_screen(Date.now().toString());
+	req.onScreen(Date.now().toString());
 });
 get('/test', function(req) {
 	var a = new Array();
 	a.push(123);
 	a.push(444);
 	var b = a.map(toString);
-	req.on_screen( b.join(',') );
+	req.onScreen( b.join(',') );
 });
 
 get('/items', function(req) {
@@ -180,14 +180,14 @@ get('/items', function(req) {
 	// get most recent
 	redis.zrevrange('items.createdAt', 0, 5, function(error, result) {
 		if (error || !result) {
-			req.on_screen('[]');
+			req.onScreen('[]');
 			return;
 		}
 
 		hashObjects(result.map(toString), 'item:', function(items) {
 			// merge in tags
 			addTagsToItems(items, function(items) {
-				req.on_screen( JSON.stringify(items) );
+				req.onScreen( JSON.stringify(items) );
 			});
 		});
 	});
@@ -196,7 +196,7 @@ get('/items', function(req) {
 get('/tags', function(req) {
 	redis.keys('tag:*', function(error, result) {
 		if (error) throw new Error(error);
-		if (!result) return req.on_screen('[]');
+		if (!result) return req.onScreen('[]');
 		var tags = result.map(function(key) {
 			console.log(key.toString());
 			var parts = key.toString().split(':');
@@ -204,7 +204,7 @@ get('/tags', function(req) {
 		});
 		console.log(tags.join(','));
 		hashObjects(tags, 'tag:', function(items) {
-			req.on_screen( JSON.stringify(items) );
+			req.onScreen( JSON.stringify(items) );
 		});
 	});
 });
@@ -212,7 +212,7 @@ get('/tags', function(req) {
 get('/items/:ids', function(req) {
 	var ids = req.ids.split(',');
 	hashObjects(ids, 'item:', function(items) {
-		req.on_screen( JSON.stringify( items ) );
+		req.onScreen( JSON.stringify( items ) );
 	});
 });
 
@@ -221,12 +221,12 @@ get('/items-by-tags/:ids', function(req) {
 		return 'tag-to-items:' + a;
 	});
 	redis.sinter(keys, function(error, result) {
-		if (error || !result) return req.on_screen('[]');
+		if (error || !result) return req.onScreen('[]');
 		var ids = result.map(toString).splice(0, 5);
 		console.log(ids.join(','));
 		hashObjects(ids, 'item:', function(items) {
 			addTagsToItems(items, function(items) {
-				req.on_screen( JSON.stringify(items) );
+				req.onScreen( JSON.stringify(items) );
 			});
 		});
 	});
@@ -236,7 +236,7 @@ get('/items/:ids/tags', function(req) {
 	var ids = req.ids.split(',');
 	redis.keys('tag:*', function(error, result) {
 		if (error) throw new Error(error);
-		if (!result) return req.on_screen('[]');
+		if (!result) return req.onScreen('[]');
 		var tags = result.map(function(key) {
 			console.log(key.toString());
 			var parts = key.toString().split(':');
@@ -244,7 +244,7 @@ get('/items/:ids/tags', function(req) {
 		});
 		console.log(tags.join(','));
 		hashObjects(tags, 'tag:', function(items) {
-			req.on_screen( JSON.stringify(items) );
+			req.onScreen( JSON.stringify(items) );
 		});
 	});
 });
@@ -271,7 +271,7 @@ post('/item/:id', function(params) {
 	multi.exec(function(error, result) {
 		if (error) throw new Error(error);
 		if (result) {
-			params.on_screen( JSON.stringify({success:true, id: id}));
+			params.onScreen( JSON.stringify({success:true, id: id}));
 		}
 	});
 });
@@ -295,7 +295,7 @@ post('/item', function(params) {
 		if (error) {
 		}
 		if (result) {
-			params.on_screen( JSON.stringify({success:true, id: id}));
+			params.onScreen( JSON.stringify({success:true, id: id}));
 		}
 	});
 });
@@ -315,7 +315,7 @@ post('/tag', function(params) {
 	multi.zadd('tags.createdAt', id, id);
 	multi.exec(function(error, result) {
 		if (result) {
-			params.on_screen( JSON.stringify({success:true, id: id}));
+			params.onScreen( JSON.stringify({success:true, id: id}));
 		}
 	});
 });
@@ -324,7 +324,7 @@ post('/items/:ids/tag/:tag', function(req) {
 	var ids = req.ids.split(',');
 	var multi = redis.multi();
 	var tag = req.tag;
-	if (ids.length == 0) return req.on_screen('{}');;
+	if (ids.length == 0) return req.onScreen('{}');;
 	for (var i = 0; i < ids.length; i++) {
 		var id = ids[i];
 		multi.sadd('tag-to-items:' + tag, id);
@@ -332,12 +332,12 @@ post('/items/:ids/tag/:tag', function(req) {
 	}
 	multi.exec(function(error, result) {
 		if (error) {
-			req.on_screen('{}');
+			req.onScreen('{}');
 			return;
 		}
 		if (result) {
 			getItemTags(ids, function(tags) {
-				req.on_screen( JSON.stringify(tags) );
+				req.onScreen( JSON.stringify(tags) );
 			});
 		}
 	});
@@ -347,7 +347,7 @@ post('/items/:ids/untag/:tag', function(req) {
 	var ids = req.ids.split(',');
 	var multi = redis.multi();
 	var tag = req.tag;
-	if (ids.length == 0) return req.on_screen('{}');;
+	if (ids.length == 0) return req.onScreen('{}');;
 	for (var i = 0; i < ids.length; i++) {
 		var id = ids[i];
 		multi.srem('tag-to-items:' + tag, id);
@@ -355,15 +355,14 @@ post('/items/:ids/untag/:tag', function(req) {
 	}
 	multi.exec(function(error, result) {
 		if (error) {
-			req.on_screen('{}');
+			req.onScreen('{}');
 			return;
 		}
 		if (result) {
 			getItemTags(ids, function(tags) {
-				req.on_screen( JSON.stringify(tags) );
+				req.onScreen( JSON.stringify(tags) );
 			});
 		}
 	});
 });
-
 
