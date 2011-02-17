@@ -83,8 +83,11 @@ function onCreate() {
 	$.post(
 		'/item',
 		$('#create').serializeArray(),
-		function() {
-			$.get('/items', updateList, 'json');
+		function(json) {
+			if (json.error) {
+				alert(json.error);
+			} else
+				$.get('/items', updateList, 'json');
 		},
 		'json'
 	);

@@ -145,9 +145,14 @@ function getItemTags(ids, whew) {
 }
 
 // both should be arrays. an array of item ids, and an array of tag names
-function tagItems(ids, tags) {
+function addTagsToItems(ids, tags, callback) {
+	// do the tags exist?
+	touchTags(tags, function() {
+		tagItems2(ids, tags, callback);
+	});
+}
+function tagItems2(ids, tags, callback) {
 	// not sure whether i have to check for duplicates
-
 	var multi = redis.multi();
 	for (var i = 0; i < ids.length; i++) {
 		var id = ids[i];
@@ -159,16 +164,34 @@ function tagItems(ids, tags) {
 	}
 	multi.exec(function(error, result) {
 		if (error) {
-			req.onScreen( jsonError('Failed to tag items'));
+			callback({error:'Failed to tag items'});
 			return;
 		}
 		if (result) {
 			getItemTags(ids, function(tags) {
-				req.onScreen( JSON.stringify(tags) );
+				callback(tags);
 			});
 		}
 	});
+}
 
+// like touch on linux ... creates if doesn't exist
+function touchTags(tags, callback) {
+	var multi = redis.multi();
+	for (var i = 0; i < tags.length; i++) {
+		var tag = tags[i];
+		var timestamp = Date.now().toString();
+		multi.hset('tag:' + tag, 'timestamp', timestamp);
+	}
+	multi.exec(function(error, result) {
+		if (error) {
+			req.onScreen( jsonError('Failed to create all tags'));
+			return;
+		}
+		if (result) {
+			callback();
+		}
+	});
 }
 
 function printItems(req) {
@@ -293,6 +316,7 @@ get('/form', function() {
 // POST
 // edit item
 post('/item/:id', function(params) {
+	var tags = params.tags.split(',');
 	var item = {
 		title: params.title,
 		body: params.body
@@ -305,7 +329,12 @@ post('/item/:id', function(params) {
 	multi.exec(function(error, result) {
 		if (error) throw new Error(error);
 		if (result) {
-			params.onScreen( JSON.stringify({success:true, id: id}));
+			if (tags) {
+				// need function to take a continuation, expecting an array of items, return it
+				addTagsToItems([id], tags, printItems(params));
+			} else {
+				hashObjects([id], 'item:', printItems(params));
+			}
 		}
 	});
 });
@@ -316,8 +345,7 @@ post('/item', function(params) {
 	var tags = params.tags.split(',');
 	var item = {
 		title: params.title,
-		body: params.body,
-		tags: tags
+		body: params.body
 	}
 	var id = Date.now().toString();
 	var multi = redis.multi();
@@ -335,7 +363,7 @@ post('/item', function(params) {
 			}));
 		}
 		if (result) {
-			if (item.tags) {
+			if (tags) {
 				// need function to take a continuation, expecting an array of items, return it
 				addTagsToItems([id], tags, printItems(params));
 			} else {
