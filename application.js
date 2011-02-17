@@ -57,7 +57,7 @@ var hashObjects = function(ids, prefix, callback) {
 	});
 };
 
-function addTagsToItems(items, whew) {
+function decorateItems(items, whew) {
 	var series = [];
 	var len = items.length;
 	var multi = redis.multi();
@@ -144,6 +144,50 @@ function getItemTags(ids, whew) {
 
 }
 
+// both should be arrays. an array of item ids, and an array of tag names
+function tagItems(ids, tags) {
+	// not sure whether i have to check for duplicates
+
+	var multi = redis.multi();
+	for (var i = 0; i < ids.length; i++) {
+		var id = ids[i];
+		for (var j = 0; j < tags.length; j++) {
+			var tag = tags[j];
+			multi.sadd('tag-to-items:' + tag, id);
+			multi.sadd('item-to-tags:' + id, tag);
+		}
+	}
+	multi.exec(function(error, result) {
+		if (error) {
+			req.onScreen( jsonError('Failed to tag items'));
+			return;
+		}
+		if (result) {
+			getItemTags(ids, function(tags) {
+				req.onScreen( JSON.stringify(tags) );
+			});
+		}
+	});
+
+}
+
+function printItems(req) {
+	return function(items) {
+		req.onScreen( jsonItems(items, false) );
+	};
+}
+
+function jsonItems(items, errorIfEmpty) {
+	if (items.length) {
+		return JSON.stringify(items);
+	} else
+		return '[]';
+}
+
+function jsonError(msg) {
+	return JSON.stringify( {error:msg} );
+}
+
 
 // GET
 get('/', function(req){
@@ -186,9 +230,7 @@ get('/items', function(req) {
 
 		hashObjects(result.map(toString), 'item:', function(items) {
 			// merge in tags
-			addTagsToItems(items, function(items) {
-				req.onScreen( JSON.stringify(items) );
-			});
+			decorateItems(items, printItems(req));
 		});
 	});
 });
@@ -203,17 +245,13 @@ get('/tags', function(req) {
 			return parts[1];
 		});
 		console.log(tags.join(','));
-		hashObjects(tags, 'tag:', function(items) {
-			req.onScreen( JSON.stringify(items) );
-		});
+		hashObjects(tags, 'tag:', printItems(req));
 	});
 });
 
 get('/items/:ids', function(req) {
 	var ids = req.ids.split(',');
-	hashObjects(ids, 'item:', function(items) {
-		req.onScreen( JSON.stringify( items ) );
-	});
+	hashObjects(ids, 'item:', printItems(req));
 });
 
 get('/items-by-tags/:ids', function(req) {
@@ -225,9 +263,7 @@ get('/items-by-tags/:ids', function(req) {
 		var ids = result.map(toString).splice(0, 5);
 		console.log(ids.join(','));
 		hashObjects(ids, 'item:', function(items) {
-			addTagsToItems(items, function(items) {
-				req.onScreen( JSON.stringify(items) );
-			});
+			decorateItems(items, printItems(req));
 		});
 	});
 });
@@ -243,9 +279,7 @@ get('/items/:ids/tags', function(req) {
 			return parts[1];
 		});
 		console.log(tags.join(','));
-		hashObjects(tags, 'tag:', function(items) {
-			req.onScreen( JSON.stringify(items) );
-		});
+		hashObjects(tags, 'tag:', printItems(req));
 	});
 });
 
@@ -278,9 +312,12 @@ post('/item/:id', function(params) {
 
 // new item
 post('/item', function(params) {
+	// if title has URL, split it out
+	var tags = params.tags.split(',');
 	var item = {
 		title: params.title,
-		body: params.body
+		body: params.body,
+		tags: tags
 	}
 	var id = Date.now().toString();
 	var multi = redis.multi();
@@ -293,9 +330,17 @@ post('/item', function(params) {
 	multi.zadd('items.createdAt', id, id);
 	multi.exec(function(error, result) {
 		if (error) {
+			params.onScreen(JSON.stringify({
+				error: 'Failed to save'
+			}));
 		}
 		if (result) {
-			params.onScreen( JSON.stringify({success:true, id: id}));
+			if (item.tags) {
+				// need function to take a continuation, expecting an array of items, return it
+				addTagsToItems([id], tags, printItems(params));
+			} else {
+				hashObjects([id], 'item:', printItems(params));
+			}
 		}
 	});
 });
@@ -315,6 +360,8 @@ post('/tag', function(params) {
 	multi.zadd('tags.createdAt', id, id);
 	multi.exec(function(error, result) {
 		if (result) {
+			// fetch and return new tag
+			// printItem
 			params.onScreen( JSON.stringify({success:true, id: id}));
 		}
 	});
@@ -325,6 +372,7 @@ post('/items/:ids/tag/:tag', function(req) {
 	var multi = redis.multi();
 	var tag = req.tag;
 	if (ids.length == 0) return req.onScreen('{}');;
+
 	for (var i = 0; i < ids.length; i++) {
 		var id = ids[i];
 		multi.sadd('tag-to-items:' + tag, id);
