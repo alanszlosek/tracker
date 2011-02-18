@@ -82,8 +82,7 @@ get('/items/:ids', 'getItems');
 function getItems() {
 	global $db;
 	$ids = explode(',', params('ids'));
-	$rows = $db->fetchAll('select * from items where id in (' . implode(',',$ids) . ') order by createdAt desc limit 10');
-	return jsonItems($rows);
+	return jsonItems( itemObjects($ids) );
 }
 
 get('/items-by-tags/:tags', 'itemsByTags');
@@ -111,20 +110,23 @@ function postItem() {
 	global $db;
 
 	$id = params('id');
+	$tags = explode(',', $_POST['tags']);
+/*
 	$tags = array_map(
-			explode(',', $_POST['tags']),
-			'trim'
+			'trim',
+			explode(',', $_POST['tags'])
 		);
+*/
 
 	$data = array(
 		'title' => $_POST['title'],
 		'body' => $_POST['body']
 	);
 	if ($id) {
+		$data['updatedAt'] = time() * 1000;
 		$db->update($data, 'items', 'id=?', array($id));
 	} else {
-		$at = date('Y-m-d H:i:s');
-		$data['createdAt'] = $at;
+		$data['createdAt'] = time() * 1000;
 		$id = $db->insert($data, 'items');
 	}
 	tagItemExclusively($id, $tags);
@@ -157,6 +159,20 @@ function itemObject($id) {
 	$row = $db->fetchRow('select * from items where id=?', array($id));
 	$row['tags'] = $db->fetchColumn('select tag from tags where item_id=?', array($id));
 	return $row;
+}
+
+function itemObjects($ids) {
+	global $db;
+
+	$where = array();
+	foreach($ids as $a) {
+		$where[] = "items.id='" . $a . "'";
+	}
+	$rows = $db->fetchAll('select * from items where ' . implode(' or ', $where) . ' order by createdAt desc limit 10');
+	foreach ($rows as $i => $row) {
+		$row['tags'] = $db->fetchColumn('select tag from tags where item_id=?', array($id));
+	}
+	return $rows;
 }
 
 

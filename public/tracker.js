@@ -30,7 +30,7 @@ function updateList(json) {
 	var html = '';
 	for (var i = 0; i < json.length; i++) {
 		var item = json[ i ];
-		var when = new Date( parseInt(item.id) );
+		var when = new Date( parseInt(item.createdAt) );
 		html += '<article rel="' + item.id + '"><header>' + item.title + '</header><details>';
 		if (item.tags) {
 			html += item.tags.map(function(tag) {
@@ -120,7 +120,7 @@ function editItem(item) {
 	if(item.tags) {
 		tags = item.tags.join(' ');
 	}
-	var when = new Date( parseInt(item.id) );
+	var when = new Date( parseInt(item.createdAt) );
 	var html = '<form class="edit" rel="' + item.id + '"><input type="hidden" name="_method" value="post" />';
 	
 	html += '<input type="text" name="title" class="title" value="' + item.title + '" />';
