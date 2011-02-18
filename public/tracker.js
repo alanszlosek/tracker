@@ -32,13 +32,12 @@ function updateList(json) {
 		var item = json[ i ];
 		var when = new Date( parseInt(item.createdAt) );
 		html += '<article rel="' + item.id + '"><header>' + item.title + '</header><details>';
+		html += '<time>' + when.format( dateFormat ) + '</time>';
 		if (item.tags) {
 			html += item.tags.map(function(tag) {
-				return '<a href="#" rel="' + tag.id + '">' + tag.name + '</a>';
+				return '<a href="#" rel="' + tag + '">' + tag + '</a>';
 			}).join(' &nbsp; ');
 		}
-		
-		html += '<time>' + when.format( dateFormat ) + '</time>';
 		html += '</details></article>';
 	}
 	$('#items').html(html);
@@ -49,7 +48,8 @@ function updateTags(json) {
 	for (var i = 0; i < json.length; i++) {
 		var tag = json[ i ];
 		//html += '<a href="#" rel="' + tag + '" style="font-size: ' + (startingSize + (a*2)) + 'px">' + tag + '</a> ';
-		html += '<li><a href="#" rel="' + tag.id + '">' + tag.name + '</a></li>';
+		//html += '<li><a href="#" rel="' + tag.id + '">' + tag.name + '</a></li>';
+		html += '<li><a href="#" rel="' + tag + '">' + tag + '</a></li>';
 	}
 	$('#tags').html(html);
 }
@@ -57,7 +57,7 @@ function updateArticleTags(json) {
 	for (var i in json) {
 		var tags = json[i];
 		var html = tags.map(function(tag) {
-			return '<a href="#" rel="' + tag.id + '">' + tag.name + '</a>';
+			return '<a href="#" rel="' + tag + '">' + tag + '</a>';
 		}).join(', ');
 		$('article[rel=' + i + '] details').html(html);
 	}
@@ -125,7 +125,7 @@ function editItem(item) {
 	
 	html += '<input type="text" name="title" class="title" value="' + item.title + '" />';
 	html += '<div class="left half"><input type="text" name="tags" class="half left" value="' + tags + '" /></div>';
-	html += '<div class="right half"><input type="text" name="timestamp" value="' + when.format(dateFormat) + '" /></div>';
+	html += '<div class="right half">' + when.format(dateFormat) + '</div>';
 	html += '<textarea name="body">' + item.body + '</textarea>';
 	html += '<button class="left submit">Submit</button></form><br class="clear" />';
 	$('#item').html(html);
@@ -209,16 +209,14 @@ function onSubmitClick() {
 		'/item' + ($form.attr('rel') ? '/' + $form.attr('rel') : ''),
 		$form.serializeArray(),
 		function(json) {
-			if (json.success == true) {
-				/*
-				if ('id' in json) {
-				} else {
-				*/
-				//}
+			if (json.error) {
 			} else {
+				$.get('/items', updateList, 'json');
+				$.get('/tags', updateTags, 'json');
+				$form.find(':text,textarea').val('');
+				getItem(json.id, viewItem);
+				// select item
 			}
-			$.get('/items', updateList, 'json');
-			$form.find(':text,textarea').val('');
 		},
 		'json'
 	);

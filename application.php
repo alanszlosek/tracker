@@ -66,9 +66,7 @@ function getIndex() {
 
 get('/items', 'getAllItems');
 function getAllItems() {
-	global $db;
-	$rows = $db->fetchAll('select * from items order by createdAt desc limit 10');
-	return jsonItems($rows);
+	return jsonItems( itemObjects() );
 }
 
 get('/tags', 'getTags');
@@ -85,16 +83,16 @@ function getItems() {
 	return jsonItems( itemObjects($ids) );
 }
 
-get('/items-by-tags/:tags', 'itemsByTags');
+get('/items-by-tags/:tags', 'getItemsByTags');
 function getItemsByTags() {
 	global $db;
-	$tags = params('tags');
+	$tags = explode(',', params('tags'));
 	$where = array();
 	foreach($tags as $tag) {
 		$where[] = "tags.tag='" . $tag . "'";
 	}
-	$rows = $db->fetchAll('select items.* from items inner join tags on (tags.item_id=items.id) where ' . implode(' or ', $tags) . ' order by createdAt desc limit 10');
-	return jsonItems($rows);
+	$rows = $db->fetchColumn('select items.id from items inner join tags on (tags.item_id=items.id) where ' . implode(' or ', $where) . ' order by items.createdAt desc limit 10');
+	return jsonItems( itemObjects($rows) );
 }
 
 get('/items/:ids/tags', 'getTagsForItems');
@@ -110,7 +108,7 @@ function postItem() {
 	global $db;
 
 	$id = params('id');
-	$tags = explode(',', $_POST['tags']);
+	$tags = explode(' ', $_POST['tags']);
 /*
 	$tags = array_map(
 			'trim',
@@ -161,16 +159,17 @@ function itemObject($id) {
 	return $row;
 }
 
-function itemObjects($ids) {
+function itemObjects($ids = array()) {
 	global $db;
 
 	$where = array();
+	if (!$ids) $where[] = '1=1'; // get all
 	foreach($ids as $a) {
 		$where[] = "items.id='" . $a . "'";
 	}
 	$rows = $db->fetchAll('select * from items where ' . implode(' or ', $where) . ' order by createdAt desc limit 10');
-	foreach ($rows as $i => $row) {
-		$row['tags'] = $db->fetchColumn('select tag from tags where item_id=?', array($id));
+	foreach ($rows as $i => &$row) {
+		$row['tags'] = $db->fetchColumn('select tag from tags where item_id=? order by tag', array($row['id']));
 	}
 	return $rows;
 }
