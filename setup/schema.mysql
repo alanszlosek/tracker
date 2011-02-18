@@ -1,0 +1,12 @@
+create table item (
+	id int(11) unsigned auto_increment,
+	createdAt datetime,
+	title varchar(255),
+	url varchar(255),
+	body text,
+	primary key (id)
+);
+create table tags (
+	tag varchar(255),
+	item_id int(11) unsigned not null,
+);
