@@ -1,9 +1,9 @@
 create table items (
 	id int(11) unsigned auto_increment,
 	createdAt datetime,
-	title varchar(255),
-	url varchar(255),
-	body text,
+	title varchar(255) not null,
+	url varchar(255) not null,
+	body text not null,
 	primary key (id)
 );
 create table tags (

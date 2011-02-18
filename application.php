@@ -1,4 +1,5 @@
 <?php
+if ($_SERVER['REMOTE_ADDR'] != '184.76.70.24') die();
 // include dbFacile
 include('lib.php/limonade/lib/limonade.php');
 include('lib.php/dbFacile/dbFacile.php');
@@ -80,8 +81,8 @@ function getTags() {
 get('/items/:ids', 'getItems');
 function getItems() {
 	global $db;
-	$ids = params('ids');
-	$rows = $db->fetchRow('select * from items where id in (' . implode(',',$ids) . ') order by createdAt desc limit 10');
+	$ids = explode(',', params('ids'));
+	$rows = $db->fetchAll('select * from items where id in (' . implode(',',$ids) . ') order by createdAt desc limit 10');
 	return jsonItems($rows);
 }
 
@@ -111,23 +112,23 @@ function postItem() {
 
 	$id = params('id');
 	$tags = array_map(
-			explode(',', params('tags')),
+			explode(',', $_POST['tags']),
 			'trim'
 		);
 
+	$data = array(
+		'title' => $_POST['title'],
+		'body' => $_POST['body']
+	);
 	if ($id) {
-		$data = array(
-			'title' => params('title'),
-			'body' => params('body')
-		);
 		$db->update($data, 'items', 'id=?', array($id));
 	} else {
 		$at = date('Y-m-d H:i:s');
-
+		$data['createdAt'] = $at;
 		$id = $db->insert($data, 'items');
 	}
 	tagItemExclusively($id, $tags);
-	return itemObject($id);
+	return jsonItems( itemObject($id) );
 }
 
 
@@ -154,7 +155,7 @@ function tagItem($id, $tags) {
 function itemObject($id) {
 	global $db;
 	$row = $db->fetchRow('select * from items where id=?', array($id));
-	$row['tags'] = $db->fetchColum('select tag from tags where item_id=?', array($id));
+	$row['tags'] = $db->fetchColumn('select tag from tags where item_id=?', array($id));
 	return $row;
 }
 
