@@ -1,4 +1,4 @@
-create table item (
+create table items (
 	id int(11) unsigned auto_increment,
 	createdAt datetime,
 	title varchar(255),
@@ -8,5 +8,5 @@ create table item (
 );
 create table tags (
 	tag varchar(255),
-	item_id int(11) unsigned not null,
+	item_id int(11) unsigned not null
 );

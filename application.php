@@ -1,9 +1,14 @@
 <?php
 // include dbFacile
-include('/home/sandbox/checkouts/limonade/lib/limonade.php');
-include('/home/sandbox/checkouts/limonade/lib/limonade.php');
+include('lib.php/limonade/lib/limonade.php');
+include('lib.php/dbFacile/dbFacile.php');
 
 $db = dbFacile::open('mysql', 'tracker', 'tracker', 'tracker');
+
+/*
+var_dump($_GET);
+exit;
+*/
 
 /*
 class Route() {
@@ -39,27 +44,29 @@ class Route() {
 	}
 }
 */
+
 function get($url, $callback) {
-	F3:dispatch_get($url, $callback);
+	dispatch_get($url, $callback);
 }
 function post($url, $callback) {
-	F3:dispatch_post($url, $callback);
+	dispatch_post($url, $callback);
 }
 
 function jsonItems($items) {
 	// return error or array of items
+	return json_encode($items);
 }
 
 get('/', 'getIndex');
 function getIndex() {
 	// render index template
-	html('index.html');
+	return file_get_contents('/home/switchprog/tracker2.net/views/index.html');
 }
 
 get('/items', 'getAllItems');
 function getAllItems() {
 	global $db;
-	$rows = $db->fetchRows('select * from items order by createdAt desc limit 10');
+	$rows = $db->fetchAll('select * from items order by createdAt desc limit 10');
 	return jsonItems($rows);
 }
 
@@ -74,7 +81,7 @@ get('/items/:ids', 'getItems');
 function getItems() {
 	global $db;
 	$ids = params('ids');
-	$rows = $db->fetchRows('select * from items where id in (' . implode(',',$ids) . ') order by createdAt desc limit 10');
+	$rows = $db->fetchRow('select * from items where id in (' . implode(',',$ids) . ') order by createdAt desc limit 10');
 	return jsonItems($rows);
 }
 
@@ -86,7 +93,7 @@ function getItemsByTags() {
 	foreach($tags as $tag) {
 		$where[] = "tags.tag='" . $tag . "'";
 	}
-	$rows = $db->fetchRows('select items.* from items inner join tags on (tags.item_id=items.id) where ' . implode(' or ', $tags) . ' order by createdAt desc limit 10');
+	$rows = $db->fetchAll('select items.* from items inner join tags on (tags.item_id=items.id) where ' . implode(' or ', $tags) . ' order by createdAt desc limit 10');
 	return jsonItems($rows);
 }
 
@@ -150,3 +157,6 @@ function itemObject($id) {
 	$row['tags'] = $db->fetchColum('select tag from tags where item_id=?', array($id));
 	return $row;
 }
+
+
+run();
