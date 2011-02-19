@@ -118,11 +118,19 @@ function postItem() {
 
 	$data = array(
 		'title' => $_POST['title'],
-		'body' => $_POST['body']
+		'body' => $_POST['body'],
+		'url' => $_POST['url']
 	);
 	if ($id) {
-		$data['updatedAt'] = time() * 1000;
-		$db->update($data, 'items', 'id=?', array($id));
+
+		if ($_POST['delete']) {
+			$db->execute('delete from items where id=?', array($id));
+			$db->execute('delete from tags where item_id=?', array($id));
+			return '{}';
+		} else {
+			$data['updatedAt'] = time() * 1000;
+			$db->update($data, 'items', 'id=?', array($id));
+		}
 	} else {
 		$data['createdAt'] = time() * 1000;
 		$id = $db->insert($data, 'items');

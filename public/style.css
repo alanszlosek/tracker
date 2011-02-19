@@ -4,7 +4,7 @@ html,body {
 	font-family: Helvetica;
 	font-size: 12pt;
 }
-article,header,summary,div {
+article,header,details,summary,div {
 	display: block;
 }
 
@@ -17,6 +17,9 @@ header {
 }
 summary {
 	
+}
+details {
+	font-style: italic;
 }
 input, button {
 	line-height: 14pt;
@@ -31,7 +34,12 @@ input[type=text] {
 }
 textarea {
 	width: 100%;
-	height: 500px;
+	height: 450px;
+}
+
+label {
+	display: block;
+	font-size: smaller;
 }
 
 article.selected {
@@ -80,6 +88,13 @@ time {
 	list-style-type: none;
 	margin: 0;
 	padding: 0;
+}
+
+#item .title, #item .date, #item .tags {
+	width: 49%;
+}
+#item .date {
+	text-align: right;
 }
 
 

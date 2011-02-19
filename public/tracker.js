@@ -10,16 +10,14 @@ function returnFalse() {
 }
 $(setup);
 function setup() {
-	$(document).delegate('#tags a', 'click', onTagClick);
+	$(document).delegate('a.tag', 'click', onTagClick);
+	$('#items').delegate('a.tag', 'click', onTagClick);
 	$(document).delegate('form', 'submit', returnFalse);
-	//$(document).delegate('a', 'click', onLinkClick);	
-	//$(document).delegate('article header', 'click', onHeaderClick);
-	//$(document).delegate('button.cancel', 'click', onCancelClick);
-	$(document).delegate('button.submit', 'click', onSubmitClick);
+	$(document).delegate('form', 'submit', onSubmitClick);
 	$(document).delegate('#newTag button', 'click', onTagSubmit);
+	$(document).delegate('article', 'click', onItemClick);
 
-
-	$('#items').delegate('article', 'click', onItemClick);
+	// bahh propagation issues
 
 	// pull!
 	$.get('/items', updateList, 'json');
@@ -27,6 +25,7 @@ function setup() {
 }
 
 function updateList(json) {
+	// try to keep previously selected item
 	var html = '';
 	for (var i = 0; i < json.length; i++) {
 		var item = json[ i ];
@@ -35,7 +34,7 @@ function updateList(json) {
 		html += '<time>' + when.format( dateFormat ) + '</time>';
 		if (item.tags) {
 			html += item.tags.map(function(tag) {
-				return '<a href="#" rel="' + tag + '">' + tag + '</a>';
+				return '<a href="#" rel="' + tag + '" class="tag">' + tag + '</a>';
 			}).join(' &nbsp; ');
 		}
 		html += '</details></article>';
@@ -49,7 +48,7 @@ function updateTags(json) {
 		var tag = json[ i ];
 		//html += '<a href="#" rel="' + tag + '" style="font-size: ' + (startingSize + (a*2)) + 'px">' + tag + '</a> ';
 		//html += '<li><a href="#" rel="' + tag.id + '">' + tag.name + '</a></li>';
-		html += '<li><a href="#" rel="' + tag + '">' + tag + '</a></li>';
+		html += '<li><a href="#" rel="' + tag + '" class="tag">' + tag + '</a></li>';
 	}
 	$('#tags').html(html);
 }
@@ -112,8 +111,12 @@ function getItem(ids, callback) {
 }
 
 function viewItem(item) {
-	var html = '<article rel="' + item.id + '"><header>' + item.title + '</header><body>' + item.body.replace(/\r\n|\r|\n/g, '<br />') + '</body></article>';
+	var tags;
+	if (item.tags)
+		tags = item.tags.join(' ');
+	var html = '<article rel="' + item.id + '"><header>' + item.title + '</header><summary>' + tags + '</summary><details>' + item.body.replace(/\r\n|\r|\n/g, '<br />') + '</details></article>';
 	$('#item').html(html);
+	// markdown here
 }
 function editItem(item) {
 	var tags = '';
@@ -123,11 +126,14 @@ function editItem(item) {
 	var when = new Date( parseInt(item.createdAt) );
 	var html = '<form class="edit" rel="' + item.id + '"><input type="hidden" name="_method" value="post" />';
 	
-	html += '<input type="text" name="title" class="title" value="' + item.title + '" />';
-	html += '<div class="left half"><input type="text" name="tags" class="half left" value="' + tags + '" /></div>';
-	html += '<div class="right half">' + when.format(dateFormat) + '</div>';
+	html += '<div class="left title"><input type="text" name="title" value="' + item.title + '" /></div>';
+	html += '<div class="right date">' + when.format(dateFormat) + '</div>';
+	html += '<div class="clear left tags"><label>tags</label><input type="text" name="tags" value="' + tags + '" /></div>';
+	html += '<div class="right half url"><label>url</label><input type="text" name="url" value="' + encodeURI(item.url) + '" /></div>';
 	html += '<textarea name="body">' + item.body + '</textarea>';
-	html += '<button class="left submit">Submit</button></form><br class="clear" />';
+	html += '<button class="left submit">Submit</button>';
+	//html += '<button class="left submit" type="sname="delete">Delete</button>';
+	html += '</form><br class="clear" />';
 	$('#item').html(html);
 }
 
@@ -150,7 +156,7 @@ function onItemClick() {
 	}
 }
 */
-function onTagClick() {
+function onTagClick(e) {
 	// how can i trigger this with the 'select none' tag link?
 	var $el = $(this);
 	var href = $el.attr('href');

@@ -1,0 +1,5 @@
+url.rewrite-once = (
+	"^(.*)(\.js|\.css)$" => "$0",
+	"^(.+)$" => "/index.php?uri=$1"
+)
+
