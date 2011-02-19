@@ -19,3 +19,5 @@ create table tags (
 );
 -- engine=innodb;
 create index tag_name on tags (tag);
+create index tag_item_id on tags (item_id);
+create index tag_fields on tags (tag,item_id);

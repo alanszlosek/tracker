@@ -16,10 +16,9 @@ header {
 	line-height: 20pt;
 }
 summary {
-	
+	font-style: italic;
 }
 details {
-	font-style: italic;
 }
 input, button {
 	line-height: 14pt;
