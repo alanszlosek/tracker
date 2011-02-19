@@ -1,0 +1,43 @@
+<?php
+include('lib.php/dbFacile/dbFacile.php');
+$db = dbFacile::open('sqlite', '/home/alan/coding/projects/tracker.net/database/tracker.db');
+$db = dbFacile::open('mysql', 'tracker', 'tracker', 'tracker');
+
+$rows = $db->fetchAll('select * from note order by id');
+foreach($rows as $row) {
+	$a = strtotime($row['dateCreated']) * 1000;
+
+	$data = array(
+		'title' => $row['title'],
+		'body' => $row['text'],
+		'createdAt' => $a
+	);
+	$id = $db2->insert($data, 'items');
+
+	$data = array(
+		'tag' => 'note',
+		'item_id' => $id
+	);
+	$db2->insert($data, 'tags');
+}
+
+$rows = $db->fetchAll('select * from page order by id');
+foreach($rows as $row) {
+	$a = strtotime($row['dateCreated']) * 1000;
+	$b = strtotime($row['dateUpdated']) * 1000;
+
+	$data = array(
+		'title' => $row['title'],
+		'body' => $row['text'],
+		'createdAt' => $a,
+		'updatedAt' => $b
+	);
+	$id = $db2->insert($data, 'items');
+
+	$data = array(
+		'tag' => 'page',
+		'item_id' => $id
+	);
+	$db2->insert($data, 'tags');
+}
+
