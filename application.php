@@ -66,7 +66,7 @@ function getIndex() {
 
 get('/items', 'getAllItems');
 function getAllItems() {
-	return jsonItems( itemObjects() );
+	return jsonItems( itemObjects(null, true) );
 }
 
 get('/tags', 'getTags');
@@ -91,7 +91,8 @@ function getItemsByTags() {
 	foreach($tags as $tag) {
 		$where[] = "tags.tag='" . $tag . "'";
 	}
-	$rows = $db->fetchColumn('select items.id from items inner join tags on (tags.item_id=items.id) where ' . implode(' or ', $where) . ' order by items.createdAt desc limit 10');
+	// group by stuff
+	$rows = $db->fetchColumn('select items.id from items inner join tags on (tags.item_id=items.id) where ' . implode(' or ', $where) . ' order by items.createdAt');
 	return jsonItems( itemObjects($rows) );
 }
 
@@ -167,15 +168,15 @@ function itemObject($id) {
 	return $row;
 }
 
-function itemObjects($ids = array()) {
+function itemObjects($ids = array(), $limit) {
 	global $db;
 
 	$where = array();
 	if (!$ids) $where[] = '1=1'; // get all
 	foreach($ids as $a) {
-		$where[] = "items.id='" . $a . "'";
+		$where[] = "id='" . $a . "'";
 	}
-	$rows = $db->fetchAll('select * from items where ' . implode(' or ', $where) . ' order by createdAt desc limit 10');
+	$rows = $db->fetchAll('select * from items where ' . implode(' or ', $where) . ' order by createdAt desc' . ($limit ? ' limit 10' : ''));
 	foreach ($rows as $i => &$row) {
 		$row['tags'] = $db->fetchColumn('select tag from tags where item_id=? order by tag', array($row['id']));
 	}
