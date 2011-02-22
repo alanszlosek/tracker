@@ -72,7 +72,7 @@ function getAllItems() {
 get('/tags', 'getTags');
 function getTags() {
 	global $db;
-	$rows = $db->fetchColumn('select distinct tag from tags order by tag');
+	$rows = $db->fetchColumn('select tag as num from tags group by tag order by count(tag) desc,tag');
 	return jsonItems($rows);
 }
 
