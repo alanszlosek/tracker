@@ -50,7 +50,7 @@ time {
 }
 
 #container {
-	width: 1000px;
+	width: 1200px;
 }
 
 .container {
@@ -74,13 +74,13 @@ time {
 	width:140px;
 }
 .items {
-	width: 300px;
+	width: 400px;
 	height: 600px;
 	overflow: auto;
 }
 
 .item {
-	width: 500px;
+	width: 600px;
 }
 
 #tags {
