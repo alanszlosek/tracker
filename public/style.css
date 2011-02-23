@@ -71,7 +71,7 @@ time {
 }
 
 .tags {
-	width:140px;
+	width:180px;
 }
 .items {
 	width: 400px;
@@ -108,7 +108,7 @@ time {
 	background-color: #f0f4f8;
 }
 
-#tags a.selected {
+#tags li.selected {
 	background-color: #dcdcdc;
 }
 

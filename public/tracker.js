@@ -10,10 +10,11 @@ function returnFalse() {
 }
 $(setup);
 function setup() {
-	$(document).delegate('a.tag', 'click', onTagClick);
+	$('#tags').delegate('a.tag', 'click', onTagClick);
+	$('#tags').delegate('a.tag2', 'click', onTagClick2);
 	$('#items').delegate('a.tag', 'click', onTagClick);
 	$(document).delegate('button', 'click', onSubmitClick);
-	$(document).delegate('#newTag button', 'click', onTagSubmit);
+	//$(document).delegate('#newTag button', 'click', onTagSubmit);
 	$('#items').delegate('article', 'click', onItemClick);
 
 	// bahh propagation issues
@@ -47,7 +48,7 @@ function updateTags(json) {
 		var tag = json[ i ];
 		//html += '<a href="#" rel="' + tag + '" style="font-size: ' + (startingSize + (a*2)) + 'px">' + tag + '</a> ';
 		//html += '<li><a href="#" rel="' + tag.id + '">' + tag.name + '</a></li>';
-		html += '<li><a href="#" rel="' + tag + '" class="tag">' + tag + '</a></li>';
+		html += '<li><a href="#" rel="' + tag + '" class="tag2">&nbsp;+&nbsp</a> <a href="#" rel="' + tag + '" class="tag">' + tag + '</a></li>';
 	}
 	$('#tags').html(html);
 }
@@ -136,62 +137,37 @@ function editItem(item) {
 	$('#item').html(html);
 }
 
-/*
-function onItemClick() {
-	var $article = $(this);
-	var $articleTags = $article.find('details a');
-	var $tags = $('#tags');
-	// select tags found in this item
-	if ($article.hasClass('selected')) {
-		$article.removeClass('selected');
-		$articleTags.each(function() {
-			$tags.find('[rel=' + $(this).attr('rel') + ']').removeClass('selected');
-		});
-	} else {
-		$article.addClass('selected');
-		$articleTags.each(function() {
-			$tags.find('[rel=' + $(this).attr('rel') + ']').addClass('selected');
-		});
-	}
-}
-*/
 function onTagClick(e) {
+	doTagClick(this, e, false);
+	return false;
+}
+function onTagClick2(e) {
+	doTagClick(this, e, true);
+	return false;
+}
+function doTagClick(el, e, multiple) {
 	// how can i trigger this with the 'select none' tag link?
-	var $el = $(this);
+	var $el = $(el);
 	var href = $el.attr('href');
 	var tag = $el.attr('rel');
-	var $selected = $('article.selected');
-	// what state are we in?
-	// filter by tag, or add/remove tag from item we're editing?
+	var $li = $el.closest('li');
 
-/*
-	if($selected.length) {
-		var ids = $.map($selected, function(el) { return $(el).attr('rel'); });
-		if ($el.hasClass('selected')) {
-			$.post('/items/' + ids.join(',') + '/untag/' + tag, updateArticleTags, 'json');
-			$el.removeClass('selected');
-		} else {
-			$.post('/items/' + ids.join(',') + '/tag/' + tag, updateArticleTags, 'json');
-			$el.addClass('selected');
-		}
-	} else { // filtering
-*/
-		if ($el.hasClass('selected')) {
-			$el.removeClass('selected');
-		} else {
-			$el.addClass('selected');
-		}
-		var tags = [];
-		$('#tags a.selected').each(function() {
-			tags.push( $(this).attr('rel') );
-		});
-		if (tags.length) {
-			// update listview
-			$.get('/items-by-tags/' + tags.join(','), updateList, 'json');
-		} else
-			$.get('/items', updateList, 'json');
-	//}
-
+	if ($li.hasClass('selected')) {
+		$li.removeClass('selected');
+	} else {
+		if (multiple == false)
+			$('#tags a.selected').removeClass('selected');
+		$li.addClass('selected');
+	}
+	var tags = [];
+	$('#tags li.selected').each(function() {
+		tags.push( $('a', this).attr('rel') );
+	});
+	if (tags.length) {
+		// update listview
+		$.get('/items-by-tags/' + tags.join(','), updateList, 'json');
+	} else
+		$.get('/items', updateList, 'json');
 	return false;
 }
 function onLinkClick() {
