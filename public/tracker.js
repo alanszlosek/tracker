@@ -12,10 +12,9 @@ $(setup);
 function setup() {
 	$(document).delegate('a.tag', 'click', onTagClick);
 	$('#items').delegate('a.tag', 'click', onTagClick);
-	$(document).delegate('form', 'submit', returnFalse);
-	$(document).delegate('form', 'submit', onSubmitClick);
+	$(document).delegate('button', 'click', onSubmitClick);
 	$(document).delegate('#newTag button', 'click', onTagSubmit);
-	$(document).delegate('article', 'click', onItemClick);
+	$('#items').delegate('article', 'click', onItemClick);
 
 	// bahh propagation issues
 
@@ -132,7 +131,7 @@ function editItem(item) {
 	html += '<div class="right half url"><label>url</label><input type="text" name="url" value="' + encodeURI(item.url) + '" /></div>';
 	html += '<textarea name="body">' + item.body + '</textarea>';
 	html += '<button class="left submit">Submit</button>';
-	//html += '<button class="left submit" type="sname="delete">Delete</button>';
+	html += '<button class="left submit" name="delete">Delete</button>';
 	html += '</form><br class="clear" />';
 	$('#item').html(html);
 }
@@ -199,7 +198,8 @@ function onLinkClick() {
 	return false;
 }
 function onSubmitClick() {
-	var $form = $(this).closest('form');
+	var $el = $(this);
+	var $form = $el.closest('form');
 	var url;
 
 	if ($form.hasClass('editing')) {
@@ -219,7 +219,6 @@ function onSubmitClick() {
 			} else {
 				$.get('/items', updateList, 'json');
 				$.get('/tags', updateTags, 'json');
-				$form.find(':text,textarea').val('');
 				getItem(json.id, viewItem);
 				// select item
 			}
