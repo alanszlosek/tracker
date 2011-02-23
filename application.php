@@ -1,4 +1,5 @@
 <?php
+error_reporting(0);
 if ($_SERVER['REMOTE_ADDR'] != '184.76.70.24') die();
 // include dbFacile
 include('lib.php/limonade/lib/limonade.php');
@@ -110,12 +111,7 @@ function postItem() {
 
 	$id = params('id');
 	$tags = explode(' ', $_POST['tags']);
-/*
-	$tags = array_map(
-			'trim',
-			explode(',', $_POST['tags'])
-		);
-*/
+	$tags = array_filter($tags);
 
 	$data = array(
 		'title' => $_POST['title'],
@@ -133,6 +129,24 @@ function postItem() {
 			$db->update($data, 'items', 'id=?', array($id));
 		}
 	} else {
+		if (substr($data['title'], 0, 4) == 'http') {
+			$html = file_get_contents($data['title']);
+			if ($html) {
+				libxml_use_internal_errors(true);
+				$xml = simplexml_load_string($html);
+echo 'here';
+				var_dump($xml);
+				if ($xml) {
+					$title = $xml->xpath('//head/title');
+					var_dump($title);exit;
+				} else {
+foreach(libxml_get_errors() as $error) {
+        echo "\t", $error->message;
+    }
+}
+			}
+			exit;
+		}
 		$data['createdAt'] = time() * 1000;
 		$id = $db->insert($data, 'items');
 	}
