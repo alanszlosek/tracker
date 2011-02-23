@@ -90,11 +90,15 @@ function getItemsByTags() {
 	$tags = explode(',', params('tags'));
 	$where = array();
 	foreach($tags as $tag) {
-		$where[] = "tags.tag='" . $tag . "'";
+		$where[] = "tag='" . $tag . "'";
 	}
 	// group by stuff
-	$rows = $db->fetchColumn('select items.id from items inner join tags on (tags.item_id=items.id) where ' . implode(' or ', $where) . ' order by items.createdAt');
-	return jsonItems( itemObjects($rows, false, 'basic') );
+	$ids = $db->fetchColumn('select item_id from tags where ' . implode(' or ', $where) . ' group by item_id having count(item_id)=' . sizeof($where));
+	$rows = $db->fetchColumn('select id from items where id in (' . implode(',', $ids) . ') order by items.createdAt');
+	if ($rows)
+		return jsonItems( itemObjects($rows, false, 'basic') );
+	else
+		return '[]';
 }
 
 get('/items/:ids/tags', 'getTagsForItems');
