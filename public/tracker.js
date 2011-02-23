@@ -156,7 +156,7 @@ function doTagClick(el, e, multiple) {
 		$li.removeClass('selected');
 	} else {
 		if (multiple == false)
-			$('#tags a.selected').removeClass('selected');
+			$('#tags li.selected').removeClass('selected');
 		$li.addClass('selected');
 	}
 	var tags = [];
