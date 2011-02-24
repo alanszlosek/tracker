@@ -114,7 +114,13 @@ function viewItem(item) {
 	var tags;
 	if (item.tags)
 		tags = item.tags.join(' ');
-	var html = '<article rel="' + item.id + '"><header>' + item.title + '</header><summary>' + tags + '</summary><details>' + item.body.replace(/\r\n|\r|\n/g, '<br />') + '</details></article>';
+	var html = '<article rel="' + item.id + '"><header>';
+	if (item.url)
+		html += '<a href="' + item.url + '">';
+	html += item.title;
+	if (item.url)
+		html += '</a>';
+	html += '</header><summary>' + tags + '</summary><details>' + item.body.replace(/\r\n|\r|\n/g, '<br />') + '</details></article>';
 	$('#item').html(html);
 	// markdown here
 }
