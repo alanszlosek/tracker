@@ -126,10 +126,10 @@ function editItem(item) {
 	var when = new Date( parseInt(item.createdAt) );
 	var html = '<form class="edit" rel="' + item.id + '"><input type="hidden" name="_method" value="post" />';
 	
-	html += '<div class="left title"><input type="text" name="title" value="' + item.title + '" /></div>';
-	html += '<div class="right date">' + when.format(dateFormat) + '</div>';
-	html += '<div class="clear left tags"><label>tags</label><input type="text" name="tags" value="' + tags + '" /></div>';
-	html += '<div class="right half url"><label>url</label><input type="text" name="url" value="' + encodeURI(item.url) + '" /></div>';
+	html += '<div><input type="text" name="title" value="' + item.title + '" /></div>';
+	html += '<div class="left half2 tags"><label>tags</label><input type="text" name="tags" value="' + tags + '" /></div>';
+	html += '<div class="right half2 date"><label>'+ when.format(dateFormat) + '</label><input type="text" name="createdAt" value="" /></div>';
+	html += '<div class="url"><label>url</label><input type="text" name="url" value="' + encodeURI(item.url) + '" /></div>';
 	html += '<textarea name="body">' + item.body + '</textarea>';
 	html += '<button class="left submit">Submit</button>';
 	html += '<button class="left submit" name="delete">Delete</button>';

@@ -140,6 +140,9 @@ time {
 .half {
 	width: 50%;
 }
+.half2 {
+	width: 49%;
+}
 .threeQuarter {
 	width: 75%;
 }

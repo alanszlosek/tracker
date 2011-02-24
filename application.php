@@ -1,5 +1,6 @@
 <?php
 error_reporting(0);
+//error_reporting(E_ALL);
 if ($_SERVER['REMOTE_ADDR'] != '184.76.70.24') die();
 // include dbFacile
 include('lib.php/limonade/lib/limonade.php');
@@ -123,12 +124,14 @@ function postItem() {
 		'url' => $_POST['url']
 	);
 	if ($id) {
-
 		if ($_POST['delete']) {
 			$db->execute('delete from items where id=?', array($id));
 			$db->execute('delete from tags where item_id=?', array($id));
 			return '{}';
 		} else {
+			if ($_POST['createdAt']) {
+				$data['createdAt'] = strtotime($_POST['createdAt']) * 1000;
+			}
 			$data['updatedAt'] = time() * 1000;
 			$db->update($data, 'items', 'id=?', array($id));
 		}
