@@ -210,6 +210,7 @@ function onDeleteClick() {
 	var $el = $(this);
 	var $form = $el.closest('form');
 	var url = '/item/' + $form.attr('rel') + '/delete';
+	if (!confirm('Are you sure?')) return false;
 	$.post(
 		url,
 		function(json) {
