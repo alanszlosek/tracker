@@ -114,7 +114,7 @@ function viewItem(item) {
 	html += item.title;
 	if (item.url)
 		html += '</a>';
-	html += '</header><summary>' + tags + '</summary><details>' + item.body.replace(/\r\n|\r|\n/g, '<br />') + '</details></article>';
+	html += '</header><summary>' + tags + '</summary><details>' + htmlEntities(item.body).replace(/\r\n|\r|\n/g, '<br />') + '</details></article>';
 	$('#item').html(html);
 	// markdown here
 }
@@ -226,3 +226,7 @@ function onDeleteClick() {
 	return false;
 }
 
+
+function htmlEntities(a) {
+	return a.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
