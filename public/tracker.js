@@ -10,6 +10,7 @@ function returnFalse() {
 }
 $(setup);
 function setup() {
+	//$(window).bind('resize', setSizes);
 	$('#tags').delegate('a.tag', 'click', onTagClick);
 	$('#tags').delegate('a.tag2', 'click', onTagClick2);
 	$('#items').delegate('a.tag', 'click', onTagClick);
@@ -22,6 +23,15 @@ function setup() {
 	// pull!
 	$.get('/items', updateList, 'json');
 	$.get('/tags', updateTags, 'json');
+
+	setSizes();
+}
+
+function setSizes() {
+	var h = $(document).height() - 50;
+	var w = $(document).width() - 580;
+	$('#container').css('height', h + 'px');
+	$('.item').css('width', w + 'px');
 }
 
 function updateList(json) {
