@@ -129,8 +129,9 @@ function postItem() {
 			$db->execute('delete from tags where item_id=?', array($id));
 			return '{}';
 		} else {
-			if ($_POST['createdAt']) {
+			if (strlen($_POST['createdAt'])) {
 				$data['createdAt'] = strtotime($_POST['createdAt']) * 1000;
+
 			}
 			$data['updatedAt'] = time() * 1000;
 			$db->update($data, 'items', 'id=?', array($id));
@@ -159,6 +160,19 @@ foreach(libxml_get_errors() as $error) {
 	}
 	tagItemExclusively($id, $tags);
 	return jsonItems( itemObject($id) );
+}
+
+post('/item/:id/delete', 'postItemDelete');
+function postItemDelete() {
+	global $db;
+
+	$id = params('id');
+	$tags = explode(' ', $_POST['tags']);
+	$tags = array_filter($tags);
+
+	$db->delete('items', 'id=?', array($id));
+	$db->delete('tags', 'item_id=?', array($id));
+	return '{}';
 }
 
 

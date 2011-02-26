@@ -14,11 +14,9 @@ function setup() {
 	$('#tags').delegate('a.tag', 'click', onTagClick);
 	$('#tags').delegate('a.tag2', 'click', onTagClick2);
 	$('#items').delegate('a.tag', 'click', onTagClick);
-	$(document).delegate('button', 'click', onSubmitClick);
-	//$(document).delegate('#newTag button', 'click', onTagSubmit);
+	$(document).delegate('.submit', 'click', onSubmitClick);
+	$('.item').delegate('.delete', 'click', onDeleteClick);
 	$('#items').delegate('article', 'click', onItemClick);
-
-	// bahh propagation issues
 
 	// pull!
 	$.get('/items', updateList, 'json');
@@ -88,20 +86,6 @@ function onHeaderClick() {
 	);
 }
 
-function onCreate() {
-	$.post(
-		'/item',
-		$('#create').serializeArray(),
-		function(json) {
-			if (json.error) {
-				alert(json.error);
-			} else
-				$.get('/items', updateList, 'json');
-		},
-		'json'
-	);
-}
-
 function onItemClick() {
 	var $article = $(this);
 	if ($article.hasClass('selected')) { // already been clicked, start editing
@@ -143,12 +127,12 @@ function editItem(item) {
 	var html = '<form class="edit" rel="' + item.id + '"><input type="hidden" name="_method" value="post" />';
 	
 	html += '<div><input type="text" name="title" value="' + item.title + '" /></div>';
-	html += '<div class="left half2 tags"><label>tags</label><input type="text" name="tags" value="' + tags + '" /></div>';
+	html += '<div class="left half2"><label>tags</label><input type="text" name="tags" value="' + tags + '" /></div>';
 	html += '<div class="right half2 date"><label>'+ when.format(dateFormat) + '</label><input type="text" name="createdAt" value="" /></div>';
 	html += '<div class="url"><label>url</label><input type="text" name="url" value="' + encodeURI(item.url) + '" /></div>';
 	html += '<textarea name="body">' + item.body + '</textarea>';
 	html += '<button class="left submit">Submit</button>';
-	html += '<button class="left submit" name="delete">Delete</button>';
+	html += '<button class="left delete" name="delete">Delete</button>';
 	html += '</form><br class="clear" />';
 	$('#item').html(html);
 }
@@ -189,6 +173,7 @@ function doTagClick(el, e, multiple) {
 function onLinkClick() {
 	return false;
 }
+
 function onSubmitClick() {
 	var $el = $(this);
 	var $form = $el.closest('form');
@@ -220,35 +205,23 @@ function onSubmitClick() {
 
 	return false;
 }
-function onCancelClick() {
-	var $form = $(this).closest('form');
-	// if editing an item, not creating a new one
-	if ($form.closest('#items')) {
-		$form.prev().show();
-		$form.remove();
-	}
-	return false;
-}
-function onTagSubmit() {
-	var $form = $(this).closest('form');
 
+function onDeleteClick() {
+	var $el = $(this);
+	var $form = $el.closest('form');
+	var url = '/item/' + $form.attr('rel') + '/delete';
 	$.post(
-		'/tag',
-		$form.serializeArray(),
+		url,
 		function(json) {
-			if (json.success == true) {
-				$form.find('input').val('');
-				/*
-				if ('id' in json) {
-				} else {
-				*/
-				//}
+			if (json.error) {
 			} else {
+				$.get('/items', updateList, 'json');
+				$.get('/tags', updateTags, 'json');
 			}
-			$.get('/tags', updateTags, 'json');
 		},
 		'json'
 	);
 
 	return false;
 }
+
