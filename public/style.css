@@ -29,10 +29,10 @@ input, textarea {
 	margin-bottom: 10px;
 }
 input[type=text] {
-	width: 100%;
+	width: 99%;
 }
 textarea {
-	width: 100%;
+	width: 99%;
 	height: 450px;
 }
 

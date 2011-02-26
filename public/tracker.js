@@ -27,7 +27,7 @@ function setup() {
 
 function setSizes() {
 	var h = $(document).height() - 50;
-	var w = $(document).width() - 580;
+	var w = $(document).width() - 600;
 	$('#container').css('height', h + 'px');
 	$('.item').css('width', w + 'px');
 }
@@ -129,7 +129,7 @@ function editItem(item) {
 	html += '<div><input type="text" name="title" value="' + item.title + '" /></div>';
 	html += '<div class="left half2"><label>tags</label><input type="text" name="tags" value="' + tags + '" /></div>';
 	html += '<div class="right half2 date"><label>'+ when.format(dateFormat) + '</label><input type="text" name="createdAt" value="" /></div>';
-	html += '<div class="url"><label>url</label><input type="text" name="url" value="' + encodeURI(item.url) + '" /></div>';
+	html += '<div class="clear url"><label>url</label><input type="text" name="url" value="' + encodeURI(item.url) + '" /></div>';
 	html += '<textarea name="body">' + item.body + '</textarea>';
 	html += '<button class="left submit">Submit</button>';
 	html += '<button class="left delete" name="delete">Delete</button>';
