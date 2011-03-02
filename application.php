@@ -138,22 +138,9 @@ function postItem() {
 		}
 	} else {
 		if (substr($data['title'], 0, 4) == 'http') {
-			$html = file_get_contents($data['title']);
-			if ($html) {
-				libxml_use_internal_errors(true);
-				$xml = simplexml_load_string($html);
-echo 'here';
-				var_dump($xml);
-				if ($xml) {
-					$title = $xml->xpath('//head/title');
-					var_dump($title);exit;
-				} else {
-foreach(libxml_get_errors() as $error) {
-        echo "\t", $error->message;
-    }
-}
-			}
-			exit;
+			$data['url'] = $data['title'];
+			$data['title'] = extractTitle($data['url']);
+			if (!$data['title']) $data['title'] = 'oops';
 		}
 		$data['createdAt'] = time() * 1000;
 		$id = $db->insert($data, 'items');
@@ -219,6 +206,19 @@ function itemObjects($ids = array(), $limit = true, $fields = null) {
 		$row['tags'] = $db->fetchColumn('select tag from tags where item_id=? order by tag', array($row['id']));
 	}
 	return $rows;
+}
+
+function extractTitle($url) {
+	$html = file_get_contents($url);
+	if ($html) {
+		$xml = new DOMDocument();
+		if( $xml->loadHTML($html) ) {
+			$x = simplexml_import_dom($xml);
+			$a = $x->xpath('//head/title');
+			return strval($a[0]);
+		}
+	}
+	return '';
 }
 
 
