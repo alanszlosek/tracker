@@ -109,6 +109,17 @@ function getTagsForItems() {
 	return jsonItems($rows);
 }
 
+get('^/add/(.+)', 'addItem');
+function addItem() {
+	$_POST = array(
+		'url' => '',
+		'body' => '',
+		'title' => str_replace('http:/', 'http://', params(0))
+	);
+	postItem();
+	echo 'alert("Added");';
+}
+
 post('/item', 'postItem');
 post('/item/:id', 'postItem');
 function postItem() {
