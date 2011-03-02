@@ -1,9 +1,20 @@
-Notes
+Introduction
 ====
 
-Planning to use Redis for data storage.
+This is the next iteration of my tracker took. I use it for journal keeping, blog staging, link-tracking, logging comments on said links.
 
-TODO
+This version is simpler than the last, though the UI is much fancier. The PHP code accepts and returns JSON, interacts with MySQL. The UI is a three-column setup: tags sorted by frequency, items, item currently being viewed or edited.
+
+Features
+====
+
+* Pure AJAX interaction with webserver means backend can be in any language. PHP backend is complete, node.js has been started.
+* Can filter items by one or more tags at a time
+* Clicking on an item in the items column shows it as text, clicking again opens it for editing
+* Bookmarklet for quickly adding URLs
+* When adding an item by URL, the title is fetched by the server, URL stored in the url field, title as the title. Auto-tagged with "url".
+
+OLD TODO (node.js and redis version)
 ====
 
 * save tags
@@ -21,16 +32,7 @@ When click Edit for an item:
 - change background
 - clicking tags adds/removes on the fly
 
-Can 
-
-BYE BYE
-====
-
-Moved to redis2json because I couldn't save or pull with biggie-orm. Fought with it long-enough. Couldn't figure it out.
-
-But redis2json is read-only. So now I have to figure out how to save multiple values to redist in node ... maybe build up some sort of simple ORM of my own. Really just need a few functions.
-
-NOTES
+OLD NOTES
 ====
 
 Tags:
