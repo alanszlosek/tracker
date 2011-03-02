@@ -1,7 +1,7 @@
 Introduction
 ====
 
-This is the next iteration of my tracker took. I use it for journal keeping, blog staging, link-tracking, logging comments on said links.
+This is the next iteration of my tracker tool. I use it for journal keeping, blog staging, link-tracking, logging comments on said links.
 
 This version is simpler than the last, though the UI is much fancier. The PHP code accepts and returns JSON, interacts with MySQL. The UI is a three-column setup: tags sorted by frequency, items, item currently being viewed or edited.
 
