@@ -114,7 +114,8 @@ function addItem() {
 	$_POST = array(
 		'url' => '',
 		'body' => '',
-		'title' => str_replace('http:/', 'http://', params(0))
+		'title' => str_replace('http:/', 'http://', params(0)),
+		'tags' => 'url'
 	);
 	postItem();
 	echo 'alert("Added");';
