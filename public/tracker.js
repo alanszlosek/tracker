@@ -106,6 +106,7 @@ function getItem(ids, callback) {
 
 function viewItem(item) {
 	var tags;
+	var showdown = new Showdown.converter();
 	if (item.tags)
 		tags = item.tags.join(' ');
 	var html = '<article rel="' + item.id + '"><header>';
@@ -114,7 +115,7 @@ function viewItem(item) {
 	html += item.title;
 	if (item.url)
 		html += '</a>';
-	html += '</header><summary>' + tags + '</summary><details>' + htmlEntities(item.body).replace(/\r\n|\r|\n/g, '<br />') + '</details></article>';
+	html += '</header><summary>' + tags + '</summary><details>' + showdown.makeHtml(item.body) + '</details></article>';
 	$('#item').html(html);
 	// markdown here
 }
