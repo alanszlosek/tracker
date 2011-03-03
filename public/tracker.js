@@ -27,7 +27,7 @@ function setup() {
 
 function setSizes() {
 	var h = $(document).height() - 50;
-	var w = $(document).width() - 600;
+	var w = $(document).width() - 620;
 	$('#container').css('height', h + 'px');
 	$('.item').css('width', w + 'px');
 }
