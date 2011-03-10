@@ -51,14 +51,19 @@ function updateList(json) {
 }
 function updateTags(json) {
 	var html = '';
-	var startingSize = 10;
 	for (var i = 0; i < json.length; i++) {
 		var tag = json[ i ];
-		//html += '<a href="#" rel="' + tag + '" style="font-size: ' + (startingSize + (a*2)) + 'px">' + tag + '</a> ';
-		//html += '<li><a href="#" rel="' + tag.id + '">' + tag.name + '</a></li>';
-		html += '<li><a href="#" rel="' + tag + '" class="tag2">&nbsp;+&nbsp</a> <a href="#" rel="' + tag + '" class="tag">' + tag + '</a></li>';
+		html += '<li rel="' + tag + '"><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">' + tag + '</a></li>';
 	}
 	$('#tags').html(html);
+}
+function updateTagsAndSelect(json) {
+	var tags = selectedTags();
+	updateTags(json);
+	for (var i in tags) {
+		var tag = tags[i];
+		$('#tags li[rel=' + tag + ']').addClass('selected');
+	}
 }
 function updateArticleTags(json) {
 	for (var i in json) {
@@ -160,10 +165,7 @@ function doTagClick(el, e, multiple) {
 			$('#tags li.selected').removeClass('selected');
 		$li.addClass('selected');
 	}
-	var tags = [];
-	$('#tags li.selected').each(function() {
-		tags.push( $('a', this).attr('rel') );
-	});
+	var tags = selectedTags();
 	if (tags.length) {
 		// update listview
 		$.get('/items-by-tags/' + tags.join(','), updateList, 'json');
@@ -178,25 +180,27 @@ function onLinkClick() {
 function onSubmitClick() {
 	var $el = $(this);
 	var $form = $el.closest('form');
-	var url;
+	var id, url;
 
 	if ($form.hasClass('editing')) {
 		$form.find('#method').val('put');
 	}
 
 	if ($form.attr('rel'))
-		url = '/item' + ($form.attr('rel') ? '/' + $form.attr('rel') : '');
+		id = $form.attr('rel');
+	if (id)
+		url = '/item/' + id;
 	else
 		url = '/item';
 
 	$.post(
-		'/item' + ($form.attr('rel') ? '/' + $form.attr('rel') : ''),
+		url,
 		$form.serializeArray(),
 		function(json) {
 			if (json.error) {
 			} else {
-				$.get('/items', updateList, 'json');
-				$.get('/tags', updateTags, 'json');
+				if (!id) $.get('/items', updateList, 'json');
+				$.get('/tags', updateTagsAndSelect, 'json');
 				getItem(json.id, viewItem);
 				// select item
 			}
@@ -227,6 +231,13 @@ function onDeleteClick() {
 	return false;
 }
 
+function selectedTags() {
+	var tags = [];
+	$('#tags li.selected').each(function() {
+		tags.push( $(this).attr('rel') );
+	});
+	return tags;
+}
 
 function htmlEntities(a) {
 	return a.replace(/</g, '&lt;').replace(/>/g, '&gt;');
