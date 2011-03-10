@@ -186,7 +186,7 @@ function tagItemExclusively($id, $tags) {
 }
 function tagItem($id, $tags) {
 	global $db;
-	$tags = array_unique();
+	$tags = array_unique($tags);
 	foreach($tags as $tag) {
 		$data = array(
 			'tag' => $tag,
