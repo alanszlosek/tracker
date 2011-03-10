@@ -41,7 +41,7 @@ function updateList(json) {
 		html += '<article rel="' + item.id + '"><header>' + item.title + '</header><details>';
 		html += '<time>' + when.format( dateFormat ) + '</time>';
 		if (item.tags) {
-			html += item.tags.map(function(tag) {
+			html += $.map(item.tags, function(tag) {
 				return '<a href="#" rel="' + tag + '" class="tag">' + tag + '</a>';
 			}).join(' &nbsp; ');
 		}
@@ -68,7 +68,7 @@ function updateTagsAndSelect(json) {
 function updateArticleTags(json) {
 	for (var i in json) {
 		var tags = json[i];
-		var html = tags.map(function(tag) {
+		var html = $.map(tags, function(tag) {
 			return '<a href="#" rel="' + tag + '">' + tag + '</a>';
 		}).join(', ');
 		$('article[rel=' + i + '] details').html(html);
