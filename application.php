@@ -88,14 +88,18 @@ function getItems() {
 get('/items-by-tags/:tags', 'getItemsByTags');
 function getItemsByTags() {
 	global $db;
-	$tags = explode(',', params('tags'));
+	$tags = array_filter(explode(',', params('tags')));
 	$where = array();
 	foreach($tags as $tag) {
 		$where[] = "tag='" . $tag . "'";
 	}
 	// group by stuff
-	$ids = $db->fetchColumn('select item_id from tags where ' . implode(' or ', $where) . ' group by item_id having count(item_id)=' . sizeof($where));
-	$rows = $db->fetchColumn('select id from items where id in (' . implode(',', $ids) . ') order by items.createdAt');
+	if ($where) {
+		$ids = $db->fetchColumn('select item_id from tags where ' . implode(' or ', $where) . ' group by item_id having count(item_id)=' . sizeof($where));
+		$rows = $db->fetchColumn('select id from items where id in (' . implode(',', $ids) . ') order by items.createdAt');
+	} else { // no tags ... pull untagged items
+		$rows = $db->fetchColumn('select id from items where id not in (select distinct item_id from tags) order by items.createdAt');
+	}
 	if ($rows)
 		return jsonItems( itemObjects($rows, false, 'basic') );
 	else
