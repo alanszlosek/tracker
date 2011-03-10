@@ -153,6 +153,7 @@ function postItem() {
 			$data['url'] = $data['title'];
 			$data['title'] = extractTitle($data['url']);
 			if (!$data['title']) $data['title'] = 'oops';
+			$tags[] = 'url';
 		}
 		$data['createdAt'] = time() * 1000;
 		$id = $db->insert($data, 'items');
@@ -185,6 +186,7 @@ function tagItemExclusively($id, $tags) {
 }
 function tagItem($id, $tags) {
 	global $db;
+	$tags = array_unique();
 	foreach($tags as $tag) {
 		$data = array(
 			'tag' => $tag,
