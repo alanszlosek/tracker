@@ -55,6 +55,8 @@ function updateTags(json) {
 		var tag = json[ i ];
 		html += '<li rel="' + tag + '"><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">' + tag + '</a></li>';
 	}
+	html += '<li>&nbsp;</li>';
+	html += '<li rel=""><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">untagged</a></li>';
 	$('#tags').html(html);
 }
 function updateTagsAndSelect(json) {
