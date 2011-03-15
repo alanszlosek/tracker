@@ -7,6 +7,8 @@ include('lib.php/limonade/lib/limonade.php');
 include('lib.php/dbFacile/dbFacile.php');
 
 $db = dbFacile::open('mysql', 'tracker', 'tracker', 'tracker');
+mysql_set_charset('utf8');
+header("Content-type: text/html; charset=utf-8");
 
 /*
 var_dump($_GET);
