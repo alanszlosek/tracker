@@ -181,6 +181,17 @@ function postItemDelete() {
 	return '{}';
 }
 
+post('/search', 'searchItems');
+function searchItems() {
+	global $db;
+	$s = $_POST['title'];
+	if ($s) {
+		$ids = $db->fetchColumn("select id from items where title like '%" . $s . "%' or body like '%" . $s . "%'");
+		if ($ids) return jsonItems( itemObjects($ids, true, 'basic') );
+		else echo '[]';
+	} else echo '[]';
+}
+
 
 // HELPERS
 

@@ -15,6 +15,7 @@ function setup() {
 	$('#tags').delegate('a.tag2', 'click', onTagClick2);
 	$('#items').delegate('a.tag', 'click', onTagClick);
 	$(document).delegate('.submit', 'click', onSubmitClick);
+	$(document).delegate('.search', 'click', onSearchClick);
 	$('.item').delegate('.delete', 'click', onDeleteClick);
 	$('#items').delegate('article', 'click', onItemClick);
 
@@ -232,6 +233,21 @@ function onDeleteClick() {
 
 	return false;
 }
+
+function onSearchClick() {
+	var $el = $(this);
+	var $form = $el.closest('form');
+
+	$.post(
+		'/search',
+		$form.serializeArray(),
+		updateList,
+		'json'
+	);
+
+	return false;
+}
+
 
 function selectedTags() {
 	var tags = [];
