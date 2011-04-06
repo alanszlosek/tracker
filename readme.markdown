@@ -5,6 +5,8 @@ This is the next iteration of my tracker tool. I use it for journal keeping, blo
 
 This version is simpler than the last, though the UI is much fancier. The PHP code accepts and returns JSON, interacts with MySQL. The UI is a three-column setup (inspired by thinkery.me): tags sorted by frequency, items, item currently being viewed or edited.
 
+Here's what it looks like: http://greaterscope.net/files/tracker.png
+
 Features
 ====
 
