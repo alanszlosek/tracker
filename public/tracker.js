@@ -13,11 +13,11 @@ function setup() {
 	//$(window).bind('resize', setSizes);
 	$('#tags').delegate('a.tag', 'click', onTagClick);
 	$('#tags').delegate('a.tag2', 'click', onTagClick2);
-	$('#items').delegate('a.tag', 'click', onTagClick);
+	$('#items').delegate('a.tag', 'click', onItemTagClick);
 	$(document).delegate('.submit', 'click', onSubmitClick);
 	$(document).delegate('.search', 'click', onSearchClick);
 	$('.item').delegate('.delete', 'click', onDeleteClick);
-	$('#items').delegate('article', 'click', onItemClick);
+	$('.items').delegate('article', 'click', onItemClick);
 
 	// pull!
 	$.get('/items', updateList, 'json');
@@ -152,6 +152,12 @@ function onTagClick(e) {
 }
 function onTagClick2(e) {
 	doTagClick(this, e, true);
+	return false;
+}
+function onItemTagClick(e) {
+	var $el = $(this);
+	var $a = $('#tags li[rel=' + $el.attr('rel') + ']');
+	doTagClick($a[0], e, false);
 	return false;
 }
 function doTagClick(el, e, multiple) {
