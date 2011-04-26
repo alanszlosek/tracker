@@ -208,9 +208,19 @@ function onSubmitClick() {
 		function(json) {
 			if (json.error) {
 			} else {
-				if (!id) $.get('/items', updateList, 'json');
-				$.get('/tags', updateTagsAndSelect, 'json');
-				getItem(json.id, viewItem);
+				if (!id) {
+					$.get(
+						'/items',
+						function(json2) {
+							updateList(json2);
+							$('.items article[rel=' + json.id + ']').addClass('selected');
+						},
+						'json'
+					);
+				} else {
+					$.get('/tags', updateTagsAndSelect, 'json');
+				}
+				getItem(json.id, editItem);
 				// select item
 			}
 		},
