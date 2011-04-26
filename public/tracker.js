@@ -220,7 +220,7 @@ function onSubmitClick() {
 				} else {
 					$.get('/tags', updateTagsAndSelect, 'json');
 				}
-				getItem(json.id, editItem);
+				getItem(json.id, (id ? viewItem : editItem));
 				// select item
 			}
 		},
