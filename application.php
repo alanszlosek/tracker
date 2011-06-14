@@ -2,6 +2,7 @@
 error_reporting(0);
 //error_reporting(E_ALL);
 if ($_SERVER['REMOTE_ADDR'] != '184.76.70.24') die();
+//if ($_SERVER['REMOTE_ADDR'] != '66.87.13.205') die();
 // include dbFacile
 include('lib.php/limonade/lib/limonade.php');
 include('lib.php/dbFacile/dbFacile.php');
@@ -186,7 +187,27 @@ function searchItems() {
 	global $db;
 	$s = $_POST['title'];
 	if ($s) {
+		// extract tags and search those explicitly afterwards
+		$result = preg_match_all('@(#[a-z0-9_-]+)@i', $s, &$matches);
+		$tags = $matches[1];
+		// remove tags from rest of search text
+		foreach ($tags as $tag) {
+			$s = str_replace($tag, '', $s);
+		}
+		$s = trim($s); // trim out spaces
+
 		$ids = $db->fetchColumn("select id from items where title like '%" . $s . "%' or body like '%" . $s . "%'");
+
+		if ($tags) {
+			$where = array();
+			foreach($tags as $tag) {
+				$where[] = "tag='" . substr($tag, 1) . "'";
+			}
+			// group by stuff
+			$tagIds = $db->fetchColumn('select distinct item_id from tags where ' . implode(' or ', $where));
+			$ids = array_intersect($ids, $tagIds);
+		}
+		
 		if ($ids) return jsonItems( itemObjects($ids, true, 'basic') );
 		else echo '[]';
 	} else echo '[]';
