@@ -12,7 +12,9 @@ article {
 }
 h1 {
 	font-size: 16pt;
+	font-weight: normal;
 	line-height: 20pt;
+	margin: 0;
 }
 .item summary {
 	font-style: italic;
