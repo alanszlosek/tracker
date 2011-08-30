@@ -1,8 +1,5 @@
 <?php
 error_reporting(0);
-//error_reporting(E_ALL);
-if ($_SERVER['REMOTE_ADDR'] != '184.76.70.24') die();
-//if ($_SERVER['REMOTE_ADDR'] != '66.87.13.205') die();
 // include dbFacile
 include('lib.php/limonade/lib/limonade.php');
 include('lib.php/dbFacile/dbFacile.php');
@@ -10,46 +7,6 @@ include('lib.php/dbFacile/dbFacile.php');
 $db = dbFacile::open('mysql', 'tracker', 'tracker', 'tracker');
 mysql_set_charset('utf8');
 header("Content-type: text/html; charset=utf-8");
-
-/*
-var_dump($_GET);
-exit;
-*/
-
-/*
-class Route() {
-	protected static $urls = array();
-	protected static $get = array();
-	protected static $post = array();
-
-	public function add($type, $url, $callback) {
-		Route::prepareUrl($url);
-		if ($type == 'get')
-			Route::$get[$url] = $callback;
-	}
-
-	public function run() {
-		$method = $_SERVER['HTTP_METHOD'];
-		
-		if ($method == 'POST') $which = Route::$post;
-		elseif ($method == 'GET') $which = Route::$get;
-
-		$keys = array_keys($which);
-
-		
-	}
-
-	protected prepareUrl($url) {
-		// escape and convert to regex
-		// keeping named placeholders
-
-		// split on slash ... then split real urls on slash, compare sizes
-		// bah
-		// not using named params ... in favor of asterisk placeholders that result in numeric matches is easier
-		// replace * with ([a-z]+) and then return $matches[2] or 3, whichever holds the parenthesized matches
-	}
-}
-*/
 
 function get($url, $callback) {
 	dispatch_get($url, $callback);
@@ -196,7 +153,9 @@ function searchItems() {
 		}
 		$s = trim($s); // trim out spaces
 
-		$ids = $db->fetchColumn("select id from items where title like '%" . $s . "%' or body like '%" . $s . "%'");
+		if ($s) { // still have some text to search for
+			$ids = $db->fetchColumn("select id from items where title like '%" . $s . "%' or body like '%" . $s . "%'");
+		} else $ids = array();
 
 		if ($tags) {
 			$where = array();
@@ -204,11 +163,12 @@ function searchItems() {
 				$where[] = "tag='" . substr($tag, 1) . "'";
 			}
 			// group by stuff
-			$tagIds = $db->fetchColumn('select distinct item_id from tags where ' . implode(' or ', $where));
-			$ids = array_intersect($ids, $tagIds);
+			$tagIds = $db->fetchColumn('select item_id from tags where ' . implode(' or ', $where) . ' group by item_id having count(item_id)=' . sizeof($where));
+			if ($ids) $ids = array_intersect($ids, $tagIds);
+			else $ids = $tagIds;
 		}
 		
-		if ($ids) return jsonItems( itemObjects($ids, true, 'basic') );
+		if ($ids) return jsonItems( itemObjects($ids, false, 'basic') );
 		else echo '[]';
 	} else echo '[]';
 }
