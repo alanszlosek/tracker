@@ -4,21 +4,18 @@ html,body {
 	font-family: Helvetica;
 	font-size: 12pt;
 }
-article,header,details,summary,div {
+article,h1,summary,section,div {
 	display: block;
 }
-
 article {
 	margin-bottom: 15px;
 }
-header {
+h1 {
 	font-size: 16pt;
 	line-height: 20pt;
 }
-summary {
+.item summary {
 	font-style: italic;
-}
-details {
 }
 input, button {
 	line-height: 14pt;

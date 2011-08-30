@@ -39,14 +39,16 @@ function updateList(json) {
 	for (var i = 0; i < json.length; i++) {
 		var item = json[ i ];
 		var when = new Date( parseInt(item.createdAt) );
-		html += '<article rel="' + item.id + '"><header>' + item.title + '</header><details>';
+		html += '<article rel="' + item.id + '"><h1>' + item.title + '</h1>';
 		html += '<time>' + when.format( dateFormat ) + '</time>';
 		if (item.tags) {
+			html += '<summary>';
 			html += $.map(item.tags, function(tag) {
 				return '<a href="#" rel="' + tag + '" class="tag">' + tag + '</a>';
 			}).join(' &nbsp; ');
+			html += '</summary>';
 		}
-		html += '</details></article>';
+		html += '</article>';
 	}
 	$('#items').html(html);
 }
@@ -74,7 +76,7 @@ function updateArticleTags(json) {
 		var html = $.map(tags, function(tag) {
 			return '<a href="#" rel="' + tag + '">' + tag + '</a>';
 		}).join(', ');
-		$('article[rel=' + i + '] details').html(html);
+		$('article[rel=' + i + '] summary').html(html);
 	}
 }
 
@@ -88,7 +90,7 @@ function onHeaderClick() {
 			var $form = $el.next();
 			$form.addClass('editing').attr('rel', $el.attr('rel'));
 			$form.find('.title').val($el.find('header').html());
-			$form.find('.tags').val($el.find('details').html());
+			$form.find('.tags').val($el.find('section').html());
 			$form.find('textarea').val($el.find('summary').html());
 		}
 	);
@@ -117,13 +119,13 @@ function viewItem(item) {
 	var showdown = new Showdown.converter();
 	if (item.tags)
 		tags = item.tags.join(' ');
-	var html = '<article rel="' + item.id + '"><header>';
+	var html = '<article rel="' + item.id + '"><h1>';
 	if (item.url)
 		html += '<a href="' + item.url + '">';
 	html += item.title;
 	if (item.url)
 		html += '</a>';
-	html += '</header><summary>' + tags + '</summary><details>' + showdown.makeHtml(item.body) + '</details></article>';
+	html += '</h1><summary>' + tags + '</summary><section>' + showdown.makeHtml(item.body) + '</section></article>';
 	$('#item').html(html);
 	// markdown here
 }
