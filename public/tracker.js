@@ -4,6 +4,8 @@ Date.prototype.format=function(format){var returnStr='';var replace=Date.replace
 
 
 var dateFormat = 'Y-m-d H:i:s';
+var currentPrefix = '/items-offset/';
+var offset = 0;
 
 function returnFalse() {
 	return false;
@@ -14,6 +16,7 @@ function setup() {
 	$('#tags').delegate('a.tag', 'click', onTagClick);
 	$('#tags').delegate('a.tag2', 'click', onTagClick2);
 	$('#items').delegate('a.tag', 'click', onItemTagClick);
+	$('#items').delegate('article.more', 'click', onMoreClick);
 	$(document).delegate('.submit', 'click', onSubmitClick);
 	$(document).delegate('.search', 'click', onSearchClick);
 	$('.item').delegate('.delete', 'click', onDeleteClick);
@@ -33,6 +36,9 @@ function setSizes() {
 	$('.item').css('width', w + 'px');
 }
 
+function clearList() {
+	$('#items').html('');
+}
 function updateList(json) {
 	// try to keep previously selected item
 	var html = '';
@@ -50,6 +56,30 @@ function updateList(json) {
 		}
 		html += '</article>';
 	}
+	if (json.length == 20) {
+		html += '<article class="more"><h1>more ...</h1></article>';
+		offset += json.length;
+	}
+	$('#items').append(html);
+}
+function appendList(json) {
+	// try to keep previously selected item
+	var html = '';
+	for (var i = 0; i < json.length; i++) {
+		var item = json[ i ];
+		var when = new Date( parseInt(item.createdAt) );
+		html += '<article rel="' + item.id + '"><h1>' + item.title + '</h1>';
+		html += '<time>' + when.format( dateFormat ) + '</time>';
+		if (item.tags) {
+			html += '<summary>';
+			html += $.map(item.tags, function(tag) {
+				return '<a href="#" rel="' + tag + '" class="tag">' + tag + '</a>';
+			}).join(' &nbsp; ');
+			html += '</summary>';
+		}
+		html += '</article>';
+	}
+	// find 'more' item and replace with this
 	$('#items').html(html);
 }
 function updateTags(json) {
@@ -108,6 +138,12 @@ function onItemClick() {
 	}
 }
 
+function onMoreClick() {
+	doTagClick2();
+	$(this).remove();
+	return false;
+}
+
 function getItem(ids, callback) {
 	$.get('/items/' + ids, function(json) {
 		callback(json[0]);
@@ -149,10 +185,12 @@ function editItem(item) {
 }
 
 function onTagClick(e) {
+	offset = 0;
 	doTagClick(this, e, false);
 	return false;
 }
 function onTagClick2(e) {
+	offset = 0;
 	doTagClick(this, e, true);
 	return false;
 }
@@ -176,12 +214,24 @@ function doTagClick(el, e, multiple) {
 			$('#tags li.selected').removeClass('selected');
 		$li.addClass('selected');
 	}
-	var tags = selectedTags();
+	$('#tags').data('offset', 0);
+	clearList();
+	doTagClick2();
+	return false;
+}
+function doTagClick2() {
+	tags = selectedTags();
+	var data = {
+		offset: $('#tags').data('offset')
+	};
 	if (tags.length) {
+		currentPrefix = '/items-by-tags/' + tags.join(',') + '/';
 		// update listview
-		$.get('/items-by-tags/' + tags.join(','), updateList, 'json');
-	} else
-		$.get('/items', updateList, 'json');
+		$.get(currentPrefix + offset, updateList, 'json');
+	} else {
+		currentPrefix = '/items-offset/';
+		$.get(currentPrefix + offset, updateList, 'json');
+	}
 	return false;
 }
 function onLinkClick() {
@@ -214,6 +264,7 @@ function onSubmitClick() {
 					$.get(
 						'/items',
 						function(json2) {
+							clearList();
 							updateList(json2);
 							$('.items article[rel=' + json.id + ']').addClass('selected');
 						},
@@ -242,6 +293,7 @@ function onDeleteClick() {
 		function(json) {
 			if (json.error) {
 			} else {
+				clearList();
 				$.get('/items', updateList, 'json');
 				$.get('/tags', updateTags, 'json');
 			}
@@ -256,6 +308,7 @@ function onSearchClick() {
 	var $el = $(this);
 	var $form = $el.closest('form');
 
+	clearList();
 	$.post(
 		'/search',
 		$form.serializeArray(),

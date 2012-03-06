@@ -1,5 +1,9 @@
 <?php
 error_reporting(0);
+
+$ips = array(
+);
+if (!in_array($_SERVER['REMOTE_ADDR'], $ips)) die();
 // include dbFacile
 include('lib.php/limonade/lib/limonade.php');
 include('lib.php/dbFacile/dbFacile.php');
@@ -28,7 +32,13 @@ function getIndex() {
 
 get('/items', 'getAllItems');
 function getAllItems() {
-	return jsonItems( itemObjects(null, true, 'basic') );
+	return jsonItems( itemObjects(null, 0, 'basic') );
+}
+get('/items-offset/:offset', 'getOffsetItems');
+function getOffsetItems() {
+	$offset = params('offset');
+	if (!$offset) $offset = 0;
+	return jsonItems( itemObjects(null, $offset, 'basic') );
 }
 
 get('/tags', 'getTags');
@@ -45,10 +55,12 @@ function getItems() {
 	return jsonItems( itemObjects($ids) );
 }
 
-get('/items-by-tags/:tags', 'getItemsByTags');
+get('/items-by-tags/:tags/:offset', 'getItemsByTags');
 function getItemsByTags() {
 	global $db;
 	$tags = array_filter(explode(',', params('tags')));
+	$offset = params('offset');
+	if (!$offset) $offset = 0;
 	$where = array();
 	foreach($tags as $tag) {
 		$where[] = "tag='" . $tag . "'";
@@ -61,7 +73,7 @@ function getItemsByTags() {
 		$rows = $db->fetchColumn('select id from items where id not in (select distinct item_id from tags) order by items.createdAt');
 	}
 	if ($rows)
-		return jsonItems( itemObjects($rows, false, 'basic') );
+		return jsonItems( itemObjects($rows, $offset, 'basic') );
 	else
 		return '[]';
 }
@@ -168,7 +180,7 @@ function searchItems() {
 			else $ids = $tagIds;
 		}
 		
-		if ($ids) return jsonItems( itemObjects($ids, false, 'basic') );
+		if ($ids) return jsonItems( itemObjects($ids, 0, 'basic') );
 		else echo '[]';
 	} else echo '[]';
 }
@@ -202,7 +214,7 @@ function itemObject($id) {
 	return $row;
 }
 
-function itemObjects($ids = array(), $limit = true, $fields = null) {
+function itemObjects($ids = array(), $offset = 0, $fields = null) {
 	global $db;
 
 	if (!$fields) $fields = '*';
@@ -213,7 +225,7 @@ function itemObjects($ids = array(), $limit = true, $fields = null) {
 	foreach($ids as $a) {
 		$where[] = "id='" . $a . "'";
 	}
-	$rows = $db->fetchAll('select ' . $fields . ' from items where ' . implode(' or ', $where) . ' order by createdAt desc' . ($limit ? ' limit 10' : ''));
+	$rows = $db->fetchAll('select ' . $fields . ' from items where ' . implode(' or ', $where) . ' order by createdAt desc limit ' . ($offset ? $offset . ',' : '') . '20');
 	foreach ($rows as $i => &$row) {
 		$row['tags'] = $db->fetchColumn('select tag from tags where item_id=? order by tag', array($row['id']));
 	}
