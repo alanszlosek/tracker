@@ -108,7 +108,7 @@ function postItem() {
 	$tags = array_filter($tags);
 
 	$data = array(
-		'title' => $_POST['title'],
+		'title' => trim($_POST['title']),
 		'body' => $_POST['body'],
 		'url' => $_POST['url']
 	);
@@ -240,7 +240,7 @@ function extractTitle($url) {
 		if( $xml->loadHTML($html) ) {
 			$x = simplexml_import_dom($xml);
 			$a = $x->xpath('//head/title');
-			return strval($a[0]);
+			return trim(strval($a[0]));
 		}
 	}
 	return '';
