@@ -3,6 +3,7 @@ error_reporting(0);
 
 $ips = array(
 );
+include('ips.php');
 if (!in_array($_SERVER['REMOTE_ADDR'], $ips)) die();
 // include dbFacile
 include('lib.php/limonade/lib/limonade.php');
