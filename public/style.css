@@ -71,7 +71,7 @@ time {
 }
 
 .tags {
-	width:190px;
+	width:200px;
 	height: 100%;
 	overflow: auto;
 }
@@ -90,6 +90,9 @@ time {
 	list-style-type: none;
 	margin: 0;
 	padding: 0;
+}
+#tags span {
+	font-size: 70%;
 }
 
 #item .title, #item .date, #item .tags {

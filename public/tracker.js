@@ -86,7 +86,7 @@ function updateTags(json) {
 	var html = '';
 	for (var i = 0; i < json.length; i++) {
 		var tag = json[ i ];
-		html += '<li rel="' + tag + '"><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">' + tag + '</a></li>';
+		html += '<li rel="' + tag[0] + '"><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">' + tag[0] + '</a> <span>' + tag[1] + '</span></li>';
 	}
 	html += '<li>&nbsp;</li>';
 	html += '<li rel=""><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">untagged</a></li>';
@@ -97,7 +97,7 @@ function updateTagsAndSelect(json) {
 	updateTags(json);
 	for (var i in tags) {
 		var tag = tags[i];
-		$('#tags li[rel=' + tag + ']').addClass('selected');
+		$('#tags li[rel=' + tag[0] + ']').addClass('selected');
 	}
 }
 function updateArticleTags(json) {
