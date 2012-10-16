@@ -48,8 +48,9 @@ time {
 	display: block;
 }
 
-#container {
-	width: 100%;
+#fixed {
+	position: fixed;
+	height: 100%;
 }
 
 .container {
@@ -57,10 +58,8 @@ time {
 }
 
 .new {
-	width: 50%;
 	height: 30px;
-	margin-left: auto;
-	margin-right: auto;
+	border-bottom: 1px dotted #000;
 }
 #title {
 	float: left;
@@ -77,11 +76,6 @@ time {
 }
 .items {
 	width: 400px;
-	height: 100%;
-	overflow: auto;
-}
-
-.item {
 	height: 100%;
 	overflow: auto;
 }
