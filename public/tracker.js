@@ -218,9 +218,7 @@ function doTagClick(el, e, multiple) {
 }
 function doTagClick2() {
 	tags = selectedTags();
-	var data = {
-		offset: $('#tags').data('offset')
-	};
+	offset = $('#tags').data('offset');
 	if (tags.length) {
 		currentPrefix = '/items-by-tags/' + tags.join(',') + '/';
 		// update listview
