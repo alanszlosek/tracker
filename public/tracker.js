@@ -10,8 +10,7 @@ var offset = 0;
 function returnFalse() {
 	return false;
 }
-$(setup);
-function setup() {
+$(function() {
 	//$(window).bind('resize', setSizes);
 	$('#tags').delegate('a.tag', 'click', onTagClick);
 	$('#tags').delegate('a.tag2', 'click', onTagClick2);
@@ -27,7 +26,7 @@ function setup() {
 	$.get('/tags', updateTags, 'json');
 
 	setSizes();
-}
+});
 
 function setSizes() {
 	$('#container').css('marginLeft', 600);
@@ -58,26 +57,6 @@ function updateList(json) {
 		offset += json.length;
 	}
 	$('#items').append(html);
-}
-function appendList(json) {
-	// try to keep previously selected item
-	var html = '';
-	for (var i = 0; i < json.length; i++) {
-		var item = json[ i ];
-		var when = new Date( parseInt(item.createdAt) );
-		html += '<article rel="' + item.id + '"><h1>' + item.title + '</h1>';
-		html += '<time>' + when.format( dateFormat ) + '</time>';
-		if (item.tags) {
-			html += '<summary>';
-			html += $.map(item.tags, function(tag) {
-				return '<a href="#" rel="' + tag + '" class="tag">' + tag + '</a>';
-			}).join(' &nbsp; ');
-			html += '</summary>';
-		}
-		html += '</article>';
-	}
-	// find 'more' item and replace with this
-	$('#items').html(html);
 }
 function updateTags(json) {
 	var html = '';
@@ -194,7 +173,7 @@ function onTagClick2(e) {
 function onItemTagClick(e) {
 	var $el = $(this);
 	var $a = $('#tags li[rel=' + $el.attr('rel') + ']');
-	doTagClick($a[0], e, false);
+	doTagClick(this, e, false);
 	return false;
 }
 function doTagClick(el, e, multiple) {
