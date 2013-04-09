@@ -173,7 +173,7 @@ function onTagClick2(e) {
 function onItemTagClick(e) {
 	var $el = $(this);
 	var $a = $('#tags li[rel=' + $el.attr('rel') + ']');
-	doTagClick(this, e, false);
+	doTagClick($a[0], e, false);
 	return false;
 }
 function doTagClick(el, e, multiple) {
@@ -190,14 +190,13 @@ function doTagClick(el, e, multiple) {
 			$('#tags li.selected').removeClass('selected');
 		$li.addClass('selected');
 	}
-	$('#tags').data('offset', 0);
+	offset = 0;
 	clearList();
 	doTagClick2();
 	return false;
 }
 function doTagClick2() {
 	tags = selectedTags();
-	offset = $('#tags').data('offset');
 	if (tags.length) {
 		currentPrefix = '/items-by-tags/' + tags.join(',') + '/';
 		// update listview
