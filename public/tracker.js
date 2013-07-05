@@ -12,14 +12,14 @@ function returnFalse() {
 }
 $(function() {
 	//$(window).bind('resize', setSizes);
-	$('#tags').delegate('a.tag', 'click', onTagClick);
-	$('#tags').delegate('a.tag2', 'click', onTagClick2);
-	$('#items').delegate('a.tag', 'click', onItemTagClick);
-	$('#items').delegate('article.more', 'click', onMoreClick);
-	$(document).delegate('.submit', 'click', onSubmitClick);
-	$(document).delegate('.search', 'click', onSearchClick);
-	$('.item').delegate('.delete', 'click', onDeleteClick);
-	$('.items').delegate('article', 'click', onItemClick);
+	$('#tags').on('click', 'a.tag', onTagClick);
+	$('#tags').on('click', 'a.tag2', onTagClick2);
+	$('#items').on('click', 'a.tag', onItemTagClick);
+	$('#items').on('click', 'article.more', onMoreClick);
+	$(document).on('click', '.submit', onSubmitClick);
+	$(document).on('click', '.search', onSearchClick);
+	$('#item').on('click', '.delete', onDeleteClick);
+	$('.items').on('click', 'article', onItemClick);
 
 	// pull!
 	$.get('/items', updateList, 'json');
