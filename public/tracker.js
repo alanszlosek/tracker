@@ -10,30 +10,26 @@ var offset = 0;
 function returnFalse() {
 	return false;
 }
-$(setup);
-function setup() {
+$(function() {
 	//$(window).bind('resize', setSizes);
-	$('#tags').delegate('a.tag', 'click', onTagClick);
-	$('#tags').delegate('a.tag2', 'click', onTagClick2);
-	$('#items').delegate('a.tag', 'click', onItemTagClick);
-	$('#items').delegate('article.more', 'click', onMoreClick);
-	$(document).delegate('.submit', 'click', onSubmitClick);
-	$(document).delegate('.search', 'click', onSearchClick);
-	$('.item').delegate('.delete', 'click', onDeleteClick);
-	$('.items').delegate('article', 'click', onItemClick);
+	$('#tags').on('click', 'a.tag', onTagClick);
+	$('#tags').on('click', 'a.tag2', onTagClick2);
+	$('#items').on('click', 'a.tag', onItemTagClick);
+	$('#items').on('click', 'article.more', onMoreClick);
+	$(document).on('click', '.submit', onSubmitClick);
+	$(document).on('click', '.search', onSearchClick);
+	$('#item').on('click', '.delete', onDeleteClick);
+	$('.items').on('click', 'article', onItemClick);
 
 	// pull!
 	$.get('/items', updateList, 'json');
 	$.get('/tags', updateTags, 'json');
 
 	setSizes();
-}
+});
 
 function setSizes() {
-	var h = $(document).height() - 50;
-	var w = $(document).width() - 620;
-	$('#container').css('height', h + 'px');
-	$('.item').css('width', w + 'px');
+	$('#container').css('marginLeft', 600);
 }
 
 function clearList() {
@@ -62,31 +58,11 @@ function updateList(json) {
 	}
 	$('#items').append(html);
 }
-function appendList(json) {
-	// try to keep previously selected item
-	var html = '';
-	for (var i = 0; i < json.length; i++) {
-		var item = json[ i ];
-		var when = new Date( parseInt(item.createdAt) );
-		html += '<article rel="' + item.id + '"><h1>' + item.title + '</h1>';
-		html += '<time>' + when.format( dateFormat ) + '</time>';
-		if (item.tags) {
-			html += '<summary>';
-			html += $.map(item.tags, function(tag) {
-				return '<a href="#" rel="' + tag + '" class="tag">' + tag + '</a>';
-			}).join(' &nbsp; ');
-			html += '</summary>';
-		}
-		html += '</article>';
-	}
-	// find 'more' item and replace with this
-	$('#items').html(html);
-}
 function updateTags(json) {
 	var html = '';
 	for (var i = 0; i < json.length; i++) {
 		var tag = json[ i ];
-		html += '<li rel="' + tag + '"><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">' + tag + '</a></li>';
+		html += '<li rel="' + tag[0] + '"><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">' + tag[0] + '</a> <span>' + tag[1] + '</span></li>';
 	}
 	html += '<li>&nbsp;</li>';
 	html += '<li rel=""><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">untagged</a></li>';
@@ -97,7 +73,7 @@ function updateTagsAndSelect(json) {
 	updateTags(json);
 	for (var i in tags) {
 		var tag = tags[i];
-		$('#tags li[rel=' + tag + ']').addClass('selected');
+		$('#tags li[rel=' + tag[0] + ']').addClass('selected');
 	}
 }
 function updateArticleTags(json) {
@@ -214,16 +190,13 @@ function doTagClick(el, e, multiple) {
 			$('#tags li.selected').removeClass('selected');
 		$li.addClass('selected');
 	}
-	$('#tags').data('offset', 0);
+	offset = 0;
 	clearList();
 	doTagClick2();
 	return false;
 }
 function doTagClick2() {
 	tags = selectedTags();
-	var data = {
-		offset: $('#tags').data('offset')
-	};
 	if (tags.length) {
 		currentPrefix = '/items-by-tags/' + tags.join(',') + '/';
 		// update listview

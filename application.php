@@ -73,8 +73,12 @@ class Controller {
 
 	public function tags() {
 		global $db;
+		$out = array();
 		$rows = $db->fetchColumn('select tag as num from tags group by tag order by count(tag) desc,tag');
-		return jsonItems($rows);
+		foreach ($rows as $row) {
+			$out[] = array_values($row);
+		}
+		return jsonItems($out);
 	}
 
 	public function itemIds($path) {

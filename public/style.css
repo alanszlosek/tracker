@@ -48,8 +48,9 @@ time {
 	display: block;
 }
 
-#container {
-	width: 100%;
+#fixed {
+	position: fixed;
+	height: 100%;
 }
 
 .container {
@@ -57,10 +58,8 @@ time {
 }
 
 .new {
-	width: 50%;
 	height: 30px;
-	margin-left: auto;
-	margin-right: auto;
+	border-bottom: 1px dotted #000;
 }
 #title {
 	float: left;
@@ -71,7 +70,7 @@ time {
 }
 
 .tags {
-	width:190px;
+	width:200px;
 	height: 100%;
 	overflow: auto;
 }
@@ -81,15 +80,13 @@ time {
 	overflow: auto;
 }
 
-.item {
-	height: 100%;
-	overflow: auto;
-}
-
 #tags {
 	list-style-type: none;
 	margin: 0;
 	padding: 0;
+}
+#tags span {
+	font-size: 70%;
 }
 
 #item .title, #item .date, #item .tags {
