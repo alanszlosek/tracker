@@ -58,7 +58,7 @@ class Controller {
         }
 	public function index() {
 		// render index template
-		return file_get_contents('/home/switchprog/tracker2.net/views/index.html');
+		return file_get_contents('/home/alan/_tracker.net/views/index.html');
 	}
 
 	public function items($path) {
@@ -185,7 +185,7 @@ class Controller {
 		$s = $_POST['title'];
 		if ($s) {
 			// extract tags and search those explicitly afterwards
-			$result = preg_match_all('@(#[a-z0-9_-]+)@i', $s, &$matches);
+			$result = preg_match_all('@(#[a-z0-9_-]+)@i', $s, $matches);
 			$tags = $matches[1];
 			// remove tags from rest of search text
 			foreach ($tags as $tag) {
