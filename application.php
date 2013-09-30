@@ -68,8 +68,7 @@ class Controller {
 	public function tags() {
 		global $db;
 		$out = array();
-		$rows = $db->fetchColumn('select tag as num from tags group by tag order by count(tag) desc,tag');
-		return jsonItems($rows);
+		$rows = $db->fetchAll('select tag,count(tag) from tags group by tag order by count(tag) desc,tag');
 		foreach ($rows as $row) {
 			$out[] = array_values($row);
 		}
