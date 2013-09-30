@@ -8,18 +8,11 @@ if (!in_array($_SERVER['REMOTE_ADDR'], $ips)) die();
 // include dbFacile
 //include('lib.php/limonade/lib/limonade.php');
 include('lib.php/dbFacile/dbFacile.php');
-include('lib.php/Route.php');
+include('lib/Route.php');
 
 $db = dbFacile::open('mysql', 'tracker', 'tracker', 'tracker');
 mysql_set_charset('utf8');
 header("Content-type: text/html; charset=utf-8");
-
-function get($url, $callback) {
-	dispatch_get($url, $callback);
-}
-function post($url, $callback) {
-	dispatch_post($url, $callback);
-}
 
 function jsonItems($items) {
 	// return error or array of items
@@ -38,8 +31,9 @@ $routes = array(
 	'items-offset' => Route::To('Controller', 'itemsOffset'),
 	'items-by-tags' => Route::To('Controller', 'itemsByTags'),
 	'item' => array(
-		'"' => Route::To('Controller', 'postItem',
+		'' => Route::To('Controller', 'postItem'),
 		'#' => array(
+			'' => Route::To('Controller', 'postItem'),
 			'delete' => Route::To('Controller', 'deleteItem'),
 		)
 	),
@@ -75,6 +69,7 @@ class Controller {
 		global $db;
 		$out = array();
 		$rows = $db->fetchColumn('select tag as num from tags group by tag order by count(tag) desc,tag');
+		return jsonItems($rows);
 		foreach ($rows as $row) {
 			$out[] = array_values($row);
 		}
@@ -124,7 +119,7 @@ class Controller {
 			'title' => str_replace('http:/', 'http://', $path[1]),
 			'tags' => 'url'
 		);
-		postItem();
+		$this->postItem($path);
 		echo 'alert("Added");';
 	}
 
@@ -212,6 +207,7 @@ class Controller {
 			else echo '[]';
 		} else echo '[]';
 	}
+}
 
 
 // HELPERS
@@ -274,4 +270,7 @@ function extractTitle($url) {
 }
 
 
-run();
+$path = explode('/', substr($_GET['uri'], 1));
+unset($_GET['uri']);
+$r = new Route($routes);
+echo $r->dispatch($path);
