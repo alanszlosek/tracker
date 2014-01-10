@@ -1,17 +1,19 @@
 <?php
 error_reporting(0);
+date_default_timezone_set('America/Los_Angeles');
 
 $ips = array(
 );
 include('ips.php');
 if (!in_array($_SERVER['REMOTE_ADDR'], $ips)) die();
-// include dbFacile
-//include('lib.php/limonade/lib/limonade.php');
-include('lib.php/dbFacile/dbFacile.php');
+// include my dbFacile project
+include('lib/dbFacile/dbFacile.php');
+// include Route from my tiny-helpers repo
 include('lib/Route.php');
 
-$db = dbFacile::open('mysql', 'tracker', 'tracker', 'tracker');
-mysql_set_charset('utf8');
+$db = dbFacile::mysql();
+$db->open('tracker', 'tracker', 'tracker');
+//mysql_set_charset('utf8');
 header("Content-type: text/html; charset=utf-8");
 
 function jsonItems($items) {
@@ -52,7 +54,7 @@ class Controller {
         }
 	public function index() {
 		// render index template
-		return file_get_contents('/home/alan/_tracker.net/views/index.html');
+		return file_get_contents('views/index.html');
 	}
 
 	public function items($path) {
