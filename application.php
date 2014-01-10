@@ -142,7 +142,6 @@ class Controller {
 			} else {
 				if (strlen($_POST['createdAt'])) {
 					$data['createdAt'] = strtotime($_POST['createdAt']) * 1000;
-
 				}
 				$data['updatedAt'] = time() * 1000;
 				$db->update($data, 'items', 'id=?', array($id));
