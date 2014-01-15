@@ -158,6 +158,10 @@ class Controller {
 				$data['title'] = extractTitle($data['url']);
 				if (!$data['title']) $data['title'] = 'oops';
 				$tags[] = 'url';
+			} else {
+				if (preg_match('/^\w+$/i', $data['title'])) {
+					$tags[] = $data['title'];
+				}
 			}
 			$data['createdAt'] = time() * 1000;
 			$id = $db->insert($data, 'items');
