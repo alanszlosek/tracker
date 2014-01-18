@@ -150,7 +150,7 @@ class Controller {
 					$data['createdAt'] = strtotime($_POST['createdAt']) * 1000;
 				}
 				$data['updatedAt'] = time() * 1000;
-				$db->update($data, 'items', 'id=?', array($id));
+				$db->update($data, 'items', array('id' => $id));
 			}
 		} else {
 			if (substr($data['title'], 0, 4) == 'http') {
