@@ -32,11 +32,15 @@ $routes = Routes(
 		)->toClassMethod('Controller', 'itemIds')->label('ids')
 	)->toClassMethod('Controller', 'items'),
 
-	'items-offset', Route::toClassMethod('Controller', 'itemsOffset')->label('offset'),
+	'items-offset', Routes(
+		':integer', Route::toClassMethod('Controller', 'itemsOffset')->label('offset')
+	),
 
 	'items-by-tags', Routes(
-		':integer', Route::toClassMethod('Controller', 'itemsByTags')->label('offset')
-	)->toClassMethod('Controller', 'itemsByTags')->label('tags'),
+		':string', Routes(
+			':integer', Route::toClassMethod('Controller', 'itemsByTags')->label('offset')
+		)->toClassMethod('Controller', 'itemsByTags')->label('tags')
+	),
 
 	'item', Routes(
 		':integer', Routes(
@@ -44,7 +48,7 @@ $routes = Routes(
 		)->toClassMethod('Controller', 'postItem')->label('id')
 	)->toClassMethod('Controller', 'postItem'),
 
-	'tags', Route::toClassMethod('Controller', 'tags')->label('tags'),
+	'tags', Route::toClassMethod('Controller', 'tags'),
 
 	'add', Routes(
 		':string', Route::toClassMethod('Controller', 'addItem')->label('title')
