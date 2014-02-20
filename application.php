@@ -13,8 +13,8 @@ if ($_SERVER['SERVER_PORT'] != 443) {
 
 // include my dbFacile project
 include('lib/dbFacile/src/dbFacile.php');
-// include Route from my tiny-helpers repo
-include('lib/Route.php');
+// include Router from my tiny-helpers repo
+include('lib/Router.php');
 
 $db = dbFacile::mysqli();
 $db->open('tracker', 'tracker', 'tracker', 'localhost', 'utf8');
@@ -25,32 +25,32 @@ function jsonItems($items) {
 	return json_encode($items);
 }
 
-$routes = array(
-	':root' => Route::To('Controller', 'index'),
-	'items' => array(
-		':root' => Route::To('Controller', 'items'),
-		':string' => array(
-			':root' => Route::To('Controller', 'itemIds', '//ids'),
-			':string' => Route::To('Controller', 'itemTags', '//ids'),
-		)
+$routes = Routes(
+	'items', Routes(
+		':string', Routes(
+			':string', Route::toClassMethod('Controller', 'itemTags')->label('ids')
+		)->toClassMethod('Controller', 'itemIds')->label('ids')
+	)->toClassMethod('Controller', 'items'),
+
+	'items-offset', Route::toClassMethod('Controller', 'itemsOffset')->label('offset'),
+
+	'items-by-tags', Routes(
+		':integer', Route::toClassMethod('Controller', 'itemsByTags')->label('offset')
+	)->toClassMethod('Controller', 'itemsByTags')->label('tags'),
+
+	'item', Routes(
+		':integer', Routes(
+			'delete', Route::toClassMethod('Controller', 'deleteItem')
+		)->toClassMethod('Controller', 'postItem')->label('id')
+	)->toClassMethod('Controller', 'postItem'),
+
+	'tags', Route::toClassMethod('Controller', 'tags')->label('tags'),
+
+	'add', Routes(
+		':string', Route::toClassMethod('Controller', 'addItem')->label('title')
 	),
-	'items-offset' => Route::To('Controller', 'itemsOffset', '//offset'),
-	'items-by-tags' => Route::To('Controller', 'itemsByTags', '//tags/offset'),
-	'item' => array(
-		':root' => Route::To('Controller', 'postItem'),
-		':integer' => array(
-			':root' => Route::To('Controller', 'postItem', '//id'),
-			'delete' => Route::To('Controller', 'deleteItem', '//id'),
-		)
-	),
-	'tags' => array(
-		':root' => Route::To('Controller', 'tags'),
-	),
-	'add' => array(
-		':string' => Route::To('Controller', 'addItem', '//title'),
-	),
-	'search' => Route::To('Controller', 'search')
-);
+	'search', Route::toClassMethod('Controller', 'search')
+)->toClassMethod('Controller', 'index');
 
 class Controller {
         public function four() {
@@ -277,6 +277,4 @@ function extractTitle($url) {
 	return '';
 }
 
-
-$r = new Route($routes);
-echo $r->dispatch($_GET['uri']);
+echo $routes->dispatch($_GET['uri']);
