@@ -1,17 +1,23 @@
 <?php
 error_reporting(0);
+date_default_timezone_set('America/Los_Angeles');
 
 $ips = array(
 );
 include('ips.php');
 if (!in_array($_SERVER['REMOTE_ADDR'], $ips)) die();
-// include dbFacile
-//include('lib.php/limonade/lib/limonade.php');
-include('lib.php/dbFacile/dbFacile.php');
-include('lib/Route.php');
+if ($_SERVER['SERVER_PORT'] != 443) {
+       header('Location: https://tracker.greaterscope.net');
+       exit;
+}
 
-$db = dbFacile::open('mysql', 'tracker', 'tracker', 'tracker');
-mysql_set_charset('utf8');
+// include my dbFacile project
+include('lib/dbFacile/src/dbFacile.php');
+// include Router from my tiny-helpers repo
+include('lib/Router.php');
+
+$db = dbFacile::mysqli();
+$db->open('tracker', 'tracker', 'tracker', 'localhost', 'utf8');
 header("Content-type: text/html; charset=utf-8");
 
 function jsonItems($items) {
@@ -19,48 +25,52 @@ function jsonItems($items) {
 	return json_encode($items);
 }
 
-$routes = array(
-	'' => Route::To('Controller', 'index'),
-	'items' => array(
-		'' => Route::To('Controller', 'items'),
-		'"' => array(
-			'' => Route::To('Controller', 'itemIds'),
-			'"' => Route::To('Controller', 'itemTags'),
-		)
+$routes = Routes(
+	'items', Routes(
+		':string', Routes(
+			':string', Route::toClassMethod('Controller', 'itemTags')->label('ids')
+		)->toClassMethod('Controller', 'itemIds')->label('ids')
+	)->toClassMethod('Controller', 'items'),
+
+	'items-offset', Routes(
+		':integer', Route::toClassMethod('Controller', 'itemsOffset')->label('offset')
 	),
-	'items-offset' => Route::To('Controller', 'itemsOffset'),
-	'items-by-tags' => Route::To('Controller', 'itemsByTags'),
-	'item' => array(
-		'' => Route::To('Controller', 'postItem'),
-		'#' => array(
-			'' => Route::To('Controller', 'postItem'),
-			'delete' => Route::To('Controller', 'deleteItem'),
-		)
+
+	'items-by-tags', Routes(
+		':string', Routes(
+			':integer', Route::toClassMethod('Controller', 'itemsByTags')->label('offset')
+		)->toClassMethod('Controller', 'itemsByTags')->label('tags')
 	),
-	'tags' => array(
-		'' => Route::To('Controller', 'tags'),
+
+	'item', Routes(
+		':integer', Routes(
+			'delete', Route::toClassMethod('Controller', 'deleteItem')
+		)->toClassMethod('Controller', 'postItem')->label('id')
+	)->toClassMethod('Controller', 'postItem'),
+
+	'tags', Route::toClassMethod('Controller', 'tags'),
+
+	'add', Routes(
+		':string', Route::toClassMethod('Controller', 'addItem')->label('title')
 	),
-	'add' => array(
-		'"' => Route::To('Controller', 'addItem'),
-	),
-	'search' => Route::To('Controller', 'search')
-);
+	'search', Route::toClassMethod('Controller', 'search')
+)->toClassMethod('Controller', 'index');
 
 class Controller {
-        public function four($path) {
+        public function four() {
                 return '404';
         }
 	public function index() {
 		// render index template
-		return file_get_contents('/home/alan/_tracker.net/views/index.html');
+		return file_get_contents('../views/index.html');
 	}
 
-	public function items($path) {
+	public function items() {
 		return jsonItems( itemObjects(null, 0, 'basic') );
 	}
 
-	public function itemsOffset($path) {
-		$offset = $path[1];
+	public function itemsOffset($params) {
+		$offset = $params->offset;
 		if (!$offset) $offset = 0;
 		return jsonItems( itemObjects(null, $offset, 'basic') );
 	}
@@ -75,17 +85,17 @@ class Controller {
 		return jsonItems($out);
 	}
 
-	public function itemIds($path) {
+	public function itemIds($params) {
 		global $db;
-		$ids = explode(',', $path[1]);
+		$ids = explode(',', $params->ids);
 		return jsonItems( itemObjects($ids) );
 	}
 
-	public function itemsByTags($path) {
+	public function itemsByTags($params) {
 		global $db;
-		$tags = $path[1];
+		$tags = $params->tags;
 		$tags = array_filter(explode(',', $tags));
-		$offset = $path[2];
+		$offset = $params->offset;
 		if (!$offset) $offset = 0;
 		$where = array();
 		foreach($tags as $tag) {
@@ -104,28 +114,28 @@ class Controller {
 			return '[]';
 	}
 
-	public function itemTags($path) {
+	public function itemTags($params) {
 		global $db;
-		$ids = $path[1];
+		$ids = $params->ids;
 		$rows = $db->fetchColumn('select tags.tag from tags where item_id=?', array($ids));
 		return jsonItems($rows);
 	}
 
-	public function addItem($path) {
+	public function addItem($params) {
 		$_POST = array(
 			'url' => '',
 			'body' => '',
-			'title' => str_replace('http:/', 'http://', $path[1]),
+			'title' => str_replace('http:/', 'http://', $params->title),
 			'tags' => 'url'
 		);
-		$this->postItem($path);
+		$this->postItem($params);
 		echo 'alert("Added");';
 	}
 
-	public function postItem($path) {
+	public function postItem($params) {
 		global $db;
 
-		$id = $path[1];
+		$id = $params->id;
 		$tags = explode(' ', $_POST['tags']);
 		$tags = array_filter($tags);
 
@@ -142,10 +152,9 @@ class Controller {
 			} else {
 				if (strlen($_POST['createdAt'])) {
 					$data['createdAt'] = strtotime($_POST['createdAt']) * 1000;
-
 				}
 				$data['updatedAt'] = time() * 1000;
-				$db->update($data, 'items', 'id=?', array($id));
+				$db->update($data, 'items', array('id' => $id));
 			}
 		} else {
 			if (substr($data['title'], 0, 4) == 'http') {
@@ -153,6 +162,10 @@ class Controller {
 				$data['title'] = extractTitle($data['url']);
 				if (!$data['title']) $data['title'] = 'oops';
 				$tags[] = 'url';
+			} else {
+				if (preg_match('/^\w+$/i', $data['title'])) {
+					$tags[] = $data['title'];
+				}
 			}
 			$data['createdAt'] = time() * 1000;
 			$id = $db->insert($data, 'items');
@@ -161,10 +174,10 @@ class Controller {
 		return jsonItems( itemObject($id) );
 	}
 
-	public function deleteItem($path) {
+	public function deleteItem($params) {
 		global $db;
 
-		$id = $path[1];
+		$id = $params->id;
 		$tags = explode(' ', $_POST['tags']);
 		$tags = array_filter($tags);
 
@@ -268,8 +281,4 @@ function extractTitle($url) {
 	return '';
 }
 
-
-$path = explode('/', substr($_GET['uri'], 1));
-unset($_GET['uri']);
-$r = new Route($routes);
-echo $r->dispatch($path);
+echo $routes->dispatch($_GET['uri']);
