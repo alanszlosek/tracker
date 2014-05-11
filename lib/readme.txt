@@ -1,1 +1,1 @@
-I'll check out third-party php requirements here
+I'll check out third-party libs here.
