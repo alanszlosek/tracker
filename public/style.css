@@ -73,6 +73,7 @@ time {
 	width:200px;
 	height: 100%;
 	overflow: auto;
+	font-size: smaller;
 }
 .items {
 	width: 400px;
