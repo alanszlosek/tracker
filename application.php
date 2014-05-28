@@ -14,7 +14,7 @@ if ($_SERVER['SERVER_PORT'] != 443) {
 // include my dbFacile project
 include('lib/dbFacile/src/dbFacile.php');
 // include Router from my tiny-helpers repo
-include('lib/Router.php');
+include('lib/Route.php');
 
 $db = dbFacile::mysqli();
 $db->open('tracker', 'tracker', 'tracker', 'localhost', 'utf8');
@@ -25,36 +25,63 @@ function jsonItems($items) {
 	return json_encode($items);
 }
 
-$routes = Routes(
-	'items', Routes(
-		':string', Routes(
-			':string', Route::toClassMethod('Controller', 'itemTags')->label('ids')
-		)->toClassMethod('Controller', 'itemIds')->label('ids')
-	)->toClassMethod('Controller', 'items'),
-
-	'items-offset', Routes(
-		':integer', Route::toClassMethod('Controller', 'itemsOffset')->label('offset')
+$routes = new Route\Route(array(
+	'__to' => 'Controller->index',
+	'items' => array(
+		'__to' => 'Controller->items',
+		':string' => array(
+			'__to' => 'Controller->itemIds',
+			'__label' => 'ids',
+			':string' => array(
+				'__to' => 'Controller->itemTags',
+				'__label' => 'ids'
+			)
+		)
 	),
 
-	'items-by-tags', Routes(
-		':string', Routes(
-			':integer', Route::toClassMethod('Controller', 'itemsByTags')->label('offset')
-		)->toClassMethod('Controller', 'itemsByTags')->label('tags')
+	'items-offset' => array(
+		':integer' => array(
+			'__to' => 'Controller->itemsOffset',
+			'__label' => 'offset'
+		)
 	),
 
-	'item', Routes(
-		':integer', Routes(
-			'delete', Route::toClassMethod('Controller', 'deleteItem')
-		)->toClassMethod('Controller', 'postItem')->label('id')
-	)->toClassMethod('Controller', 'postItem'),
-
-	'tags', Route::toClassMethod('Controller', 'tags'),
-
-	'add', Routes(
-		':string', Route::toClassMethod('Controller', 'addItem')->label('title')
+	'items-by-tags' => array(
+		':string' => array(
+			'__to' => 'Controller->itemsByTags',
+			'__label' => 'tags',
+			':integer' => array(
+				'__to' => 'Controller->itemsByTags',
+				'__label' => 'offset'
+			)
+		)
 	),
-	'search', Route::toClassMethod('Controller', 'search')
-)->toClassMethod('Controller', 'index');
+
+	'item' => array(
+		'__to' => 'Controller->postItem',
+		':integer' => array(
+			'__to' => 'Controller->postItem',
+			'__label' => 'id',
+			'delete' => array(
+				'__to' => 'Controller->deleteItem'
+			)
+		)
+	),
+
+	'tags' => array(
+		'__to' => 'Controller->tags'
+	),
+
+	'add' => array(
+		':string' => array(
+			'__to' => 'Controller->addItem',
+			'__label' => 'title'
+		)
+	),
+	'search' => array(
+		'__to' => 'Controller->search'
+	)
+));
 
 class Controller {
         public function four() {
