@@ -16,6 +16,11 @@ h1 {
 	line-height: 20pt;
 	margin: 0;
 }
+h2 {
+    font-size: 14pt; 
+    font-weight: normal;
+    margin: 0 0 0.5em 0;
+}
 .item summary {
 	font-style: italic;
 }

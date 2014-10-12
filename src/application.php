@@ -2,21 +2,19 @@
 error_reporting(0);
 date_default_timezone_set('America/New_York');
 
+require('../vendor/autoload.php');
+
 $ips = array(
 );
-include('ips.php');
+include('../ips.php');
+
 if (!in_array($_SERVER['REMOTE_ADDR'], $ips)) die();
 if ($_SERVER['SERVER_PORT'] != 443) {
        header('Location: https://tracker.greaterscope.net');
        exit;
 }
 
-// include my dbFacile project
-include('lib/dbFacile/src/dbFacile.php');
-// include Router from my tiny-helpers repo
-include('lib/Route.php');
-
-$db = dbFacile::mysqli();
+$db = \dbFacile\factory::mysqli();
 $db->open('tracker', 'tracker', 'tracker', 'localhost', 'utf8');
 header("Content-type: text/html; charset=utf-8");
 
@@ -25,7 +23,7 @@ function jsonItems($items) {
 	return json_encode($items);
 }
 
-$routes = new Route\Route(array(
+$routes = new TinyHelpers\Route(array(
 	'__to' => 'Controller->index',
 	'items' => array(
 		'__to' => 'Controller->items',
@@ -89,7 +87,7 @@ class Controller {
         }
 	public function index() {
 		// render index template
-		return file_get_contents('../views/index.html');
+		return file_get_contents(__DIR__ . '/views/index.html');
 	}
 
 	public function items() {
@@ -124,14 +122,25 @@ class Controller {
 		$tags = array_filter(explode(',', $tags));
 		$offset = $params->offset;
 		if (!$offset) $offset = 0;
-		$where = array();
-		foreach($tags as $tag) {
-			$where[] = "tag='" . $tag . "'";
-		}
-		// group by stuff
-		if ($where) {
-			$ids = $db->fetchColumn('select item_id from tags where ' . implode(' or ', $where) . ' group by item_id having count(item_id)=' . sizeof($where));
-			$rows = $db->fetchColumn('select id from items where id in (' . implode(',', $ids) . ') order by items.createdAt');
+
+		if ($tags) {
+            $parts = array();
+			$sql = 'SELECT item_id FROM tags';
+            if ($tags) {
+                $sql .= ' WHERE ';
+                foreach($tags as $tag) {
+                    $sql .= 'tag=';
+                    $parts[] = $sql;
+                    $parts[] = $tag;
+                    $sql = ' OR ';
+                }
+                $sql = '';
+            }
+            $sql .= ' GROUP BY item_id HAVING count(item_id)=' . sizeof($tags);
+            $parts[] = $sql;
+
+            $ids = call_user_func_array(array($db, 'fetchColumn'), $parts);
+			$rows = $db->fetchColumn('select id from items where id in ', $ids, ' order by items.createdAt');
 		} else { // no tags ... pull untagged items
 			$rows = $db->fetchColumn('select id from items where id not in (select distinct item_id from tags) order by items.createdAt');
 		}
@@ -144,7 +153,7 @@ class Controller {
 	public function itemTags($params) {
 		global $db;
 		$ids = $params->ids;
-		$rows = $db->fetchColumn('select tags.tag from tags where item_id=?', array($ids));
+		$rows = $db->fetchColumn('select tags.tag from tags where item_id=', $ids);
 		return jsonItems($rows);
 	}
 
@@ -173,15 +182,15 @@ class Controller {
 		);
 		if ($id) {
 			if ($_POST['delete']) {
-				$db->execute('delete from items where id=?', array($id));
-				$db->execute('delete from tags where item_id=?', array($id));
+				$db->execute('delete from items where id=', $id);
+				$db->execute('delete from tags where item_id=', $id);
 				return '{}';
 			} else {
 				if (strlen($_POST['createdAt'])) {
 					$data['createdAt'] = strtotime($_POST['createdAt']) * 1000;
 				}
 				$data['updatedAt'] = time() * 1000;
-				$db->update($data, 'items', array('id' => $id));
+				$db->update('items', $data, array('id' => $id));
 			}
 		} else {
 			if (substr($data['title'], 0, 4) == 'http') {
@@ -195,7 +204,7 @@ class Controller {
 				}
 			}
 			$data['createdAt'] = time() * 1000;
-			$id = $db->insert($data, 'items');
+			$id = $db->insert('items', $data);
 		}
 		tagItemExclusively($id, $tags);
 		return jsonItems( itemObject($id) );
@@ -208,8 +217,8 @@ class Controller {
 		$tags = explode(' ', $_POST['tags']);
 		$tags = array_filter($tags);
 
-		$db->delete('items', 'id=?', array($id));
-		$db->delete('tags', 'item_id=?', array($id));
+		$db->delete('items', array('id' => $id));
+		$db->delete('tags', array('item_id' => $id));
 		return '{}';
 	}
 
@@ -232,12 +241,17 @@ class Controller {
 			} else $ids = array();
 
 			if ($tags) {
-				$where = array();
+                $parts = array();
+				$sql = 'select item_id from tags WHERE ';
 				foreach($tags as $tag) {
-					$where[] = "tag='" . substr($tag, 1) . "'";
+					$sql .= 'tag=';
+                    $parts[] = $sql;
+                    $parts[] = substr($tag, 1);
+                    $sql = ' OR ';
 				}
-				// group by stuff
-				$tagIds = $db->fetchColumn('select item_id from tags where ' . implode(' or ', $where) . ' group by item_id having count(item_id)=' . sizeof($where));
+                $sql = 'group by item_id having count(item_id)=' . sizeof($tags);
+                $parts[] = $sql;
+				$tagIds = call_user_func_array(array($db, 'fetchColumn'), $parts);
 				if ($ids) $ids = array_intersect($ids, $tagIds);
 				else $ids = $tagIds;
 			}
@@ -253,27 +267,38 @@ class Controller {
 
 function tagItemExclusively($id, $tags) {
 	global $db;
-	$db->execute('delete from tags where item_id=?', array($id));
+	$db->execute('delete from tags where item_id=', $id);
 	tagItem($id, $tags);
 	return true;
 }
 function tagItem($id, $tags) {
 	global $db;
+
+    // Enforce use of certain tags
+    $converge = array(
+        'book' => 'books',
+        'computerscience' => 'computer-science',
+        'operatingsystems' => 'operating-systems',
+    );
+
 	$tags = array_unique($tags);
 	foreach($tags as $tag) {
+        if (isset($converge[$tag])) {
+            $tag = $converge[$tag];
+        }
 		$data = array(
 			'tag' => $tag,
 			'item_id' => $id
 		);
-		$db->insert($data, 'tags');
+		$db->insert('tags', $data);
 	}
 	return true;
 }
 
 function itemObject($id) {
 	global $db;
-	$row = $db->fetchRow('select * from items where id=?', array($id));
-	$row['tags'] = $db->fetchColumn('select tag from tags where item_id=?', array($id));
+	$row = $db->fetchRow('select * from items where id=', $id);
+	$row['tags'] = $db->fetchColumn('select tag from tags where item_id=', $id);
 	return $row;
 }
 
@@ -283,14 +308,24 @@ function itemObjects($ids = array(), $offset = 0, $fields = null) {
 	if (!$fields) $fields = '*';
 	elseif ($fields == 'basic') $fields = 'id,title,createdAt';
 
-	$where = array();
-	if (!$ids) $where[] = '1=1'; // get all
-	foreach($ids as $a) {
-		$where[] = "id='" . $a . "'";
-	}
-	$rows = $db->fetchAll('select ' . $fields . ' from items where ' . implode(' or ', $where) . ' order by createdAt desc limit ' . ($offset ? $offset . ',' : '') . '20');
+    $parts = array();
+	$sql = 'SELECT ' . $fields . ' FROM items';
+    if ($ids) {
+        $sql .= ' WHERE ';
+        foreach($ids as $id) {
+            $sql .= 'id=';
+            $parts[] = $sql;
+            $parts[] = $id;
+            $sql = ' OR ';
+        }
+        $sql = '';
+    }
+    $sql .= ' ORDER BY createdAt desc limit ' . ($offset ? $offset . ',' : '') . '20';
+    $parts[] = $sql;
+
+	$rows = call_user_func_array(array($db, 'fetchAll'), $parts);
 	foreach ($rows as $i => &$row) {
-		$row['tags'] = $db->fetchColumn('select tag from tags where item_id=? order by tag', array($row['id']));
+		$row['tags'] = $db->fetchColumn('select tag from tags where item_id=', $row['id'], ' order by tag');
 	}
 	return $rows;
 }

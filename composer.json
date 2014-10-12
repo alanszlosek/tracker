@@ -1,0 +1,16 @@
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/alanszlosek/tiny-helpers"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/alanszlosek/dbFacile"
+        }
+    ],
+    "require": {
+        "alanszlosek/tiny-helpers": "@dev",
+        "alanszlosek/dbFacile": "@dev"
+    }
+}
