@@ -279,6 +279,7 @@ function tagItem($id, $tags) {
         'book' => 'books',
         'computerscience' => 'computer-science',
         'operatingsystems' => 'operating-systems',
+        'videos' => 'video'
     );
 
 	$tags = array_unique($tags);
