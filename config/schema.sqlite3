@@ -1,0 +1,19 @@
+drop table if exists items;
+drop table if exists tags;
+create table items (
+	id integer primary key autoincrement,
+	createdAt integer not null default 0,
+	updatedAt integer not null default 0,
+	title text not null,
+	url text not null,
+	body text not null,
+	other text not null
+);
+create index item_createdAt on items (createdAt);
+
+create table tags (
+	tag text,
+	item_id integer not null
+);
+create index tag_item_id on tags (item_id);
+create index tag_fields on tags (tag,item_id);
