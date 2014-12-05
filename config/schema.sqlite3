@@ -6,8 +6,7 @@ create table items (
 	updatedAt integer not null default 0,
 	title text not null,
 	url text not null,
-	body text not null,
-	other text not null
+	body text not null
 );
 create index item_createdAt on items (createdAt);
 
