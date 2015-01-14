@@ -8,299 +8,314 @@ var currentPrefix = '/items-offset/';
 var offset = 0;
 
 function returnFalse() {
-	return false;
+    return false;
 }
 $(function() {
-	//$(window).bind('resize', setSizes);
-	$('#tags').on('click', 'a.tag', onTagClick);
-	$('#tags').on('click', 'a.tag2', onTagClick2);
-	$('#items').on('click', 'a.tag', onItemTagClick);
-	$('#items').on('click', 'article.more', onMoreClick);
-	$(document).on('click', '.submit', onSubmitClick);
-	$(document).on('click', '.search', onSearchClick);
-	$('#item').on('click', '.delete', onDeleteClick);
-	$('.items').on('click', 'article', onItemClick);
+    var $processing = $('#processing');
+    //$(window).bind('resize', setSizes);
+    $('#tags').on('click', 'a.tag', onTagClick);
+    $('#tags').on('click', 'a.tag2', onTagClick2);
+    $('#items').on('click', 'a.tag', onItemTagClick);
+    $('#items').on('click', 'article.more', onMoreClick);
+    $(document).on('click', '.submit', onSubmitClick);
+    $(document).on('click', '.search', onSearchClick);
+    $('#item').on('click', '.delete', onDeleteClick);
+    $('.items').on('click', 'article', onItemClick);
 
-	// pull!
-	$.get('/items', updateList, 'json');
-	$.get('/tags', updateTags, 'json');
 
-	setSizes();
+    $(document)
+        .ajaxStart(function() {
+            $processing.show();
+        })
+        .ajaxStop(function() {
+            $processing.hide();
+        });
+
+    // pull!
+    $.get('/items', updateList, 'json');
+    $.get('/tags', updateTags, 'json');
+
+    setSizes();
 });
 
 function setSizes() {
-	$('#container').css('marginLeft', 600);
+    $('#container').css('marginLeft', 600);
 }
 
 function clearList() {
-	$('#items').html('');
+    $('#items').html('');
 }
 function updateList(json) {
-	// try to keep previously selected item
-	var html = '';
-	for (var i = 0; i < json.length; i++) {
-		var item = json[ i ];
-		var when = new Date( parseInt(item.createdAt) );
-		html += '<article rel="' + item.id + '"><h1>' + item.title + '</h1>';
-		html += '<time>' + when.format( dateFormat ) + '</time>';
-		if (item.tags) {
-			html += '<summary>';
-			html += $.map(item.tags, function(tag) {
-				return '<a href="#" rel="' + tag + '" class="tag">' + tag + '</a>';
-			}).join(' &nbsp; ');
-			html += '</summary>';
-		}
-		html += '</article>';
-	}
-	if (json.length == 20) {
-		html += '<article class="more"><h1>more ...</h1></article>';
-		offset += json.length;
-	}
-	$('#items').append(html);
+    // try to keep previously selected item
+    var html = '';
+    for (var i = 0; i < json.length; i++) {
+        var item = json[ i ];
+        var when = new Date( parseInt(item.createdAt) );
+        html += '<article rel="' + item.id + '"><h1>' + item.title + '</h1>';
+        html += '<time>' + when.format( dateFormat ) + '</time>';
+        if (item.tags) {
+            html += '<summary>';
+            html += $.map(item.tags, function(tag) {
+                return '<a href="#" rel="' + tag + '" class="tag">' + tag + '</a>';
+            }).join(' &nbsp; ');
+            html += '</summary>';
+        }
+        html += '</article>';
+    }
+    if (json.length == 20) {
+        html += '<article class="more"><h1>more ...</h1></article>';
+        offset += json.length;
+    }
+    $('#items').append(html);
 }
 function updateTags(json) {
-	var html = '';
-	for (var i = 0; i < json.length; i++) {
-		var tag = json[ i ];
-		html += '<li rel="' + tag[0] + '"><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">' + tag[0] + '</a> <span>' + tag[1] + '</span></li>';
-	}
-	html += '<li>&nbsp;</li>';
-	html += '<li rel=""><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">untagged</a></li>';
-	$('#tags').html(html);
+    var html = '';
+    for (var i = 0; i < json.length; i++) {
+        var tag = json[ i ];
+        html += '<li rel="' + tag[0] + '"><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">' + tag[0] + '</a> <span>' + tag[1] + '</span></li>';
+    }
+    html += '<li>&nbsp;</li>';
+    html += '<li rel=""><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">untagged</a></li>';
+    $('#tags').html(html);
 }
 function updateTagsAndSelect(json) {
-	var tags = selectedTags();
-	updateTags(json);
-	for (var i in tags) {
-		var tag = tags[i];
-		$('#tags li[rel=' + tag[0] + ']').addClass('selected');
-	}
+    var tags = selectedTags();
+    updateTags(json);
+    for (var i in tags) {
+        var tag = tags[i];
+        $('#tags li[rel=' + tag[0] + ']').addClass('selected');
+    }
 }
 function updateArticleTags(json) {
-	for (var i in json) {
-		var tags = json[i];
-		var html = $.map(tags, function(tag) {
-			return '<a href="#" rel="' + tag + '">' + tag + '</a>';
-		}).join(', ');
-		$('article[rel=' + i + '] summary').html(html);
-	}
+    for (var i in json) {
+        var tags = json[i];
+        var html = $.map(tags, function(tag) {
+            return '<a href="#" rel="' + tag + '">' + tag + '</a>';
+        }).join(', ');
+        $('article[rel=' + i + '] summary').html(html);
+    }
 }
 
 function onHeaderClick() {
-	var $el = $(this).closest('article');
-	$el.hide();
-	$.get(
-		'/form',
-		function(html) {
-			$el.after(html);
-			var $form = $el.next();
-			$form.addClass('editing').attr('rel', $el.attr('rel'));
-			$form.find('.title').val($el.find('header').html());
-			$form.find('.tags').val($el.find('section').html());
-			$form.find('textarea').val($el.find('summary').html());
-		}
-	);
+    var $el = $(this).closest('article');
+    $el.hide();
+    $.get(
+        '/form',
+        function(html) {
+            $el.after(html);
+            var $form = $el.next();
+            $form.addClass('editing').attr('rel', $el.attr('rel'));
+            $form.find('.title').val($el.find('header').html());
+            $form.find('.tags').val($el.find('section').html());
+            $form.find('textarea').val($el.find('summary').html());
+        }
+    );
 }
 
 function onItemClick() {
-	var $article = $(this);
-	if ($article.hasClass('selected')) { // already been clicked, start editing
-		getItem($article.attr('rel'), editItem);
+    var $article = $(this);
+    if ($article.hasClass('selected')) { // already been clicked, start editing
+        getItem($article.attr('rel'), editItem);
 
-	} else {
-		$('#items article').removeClass('selected');
-		$article.addClass('selected');
-		getItem($article.attr('rel'), viewItem);
-	}
+    } else {
+        $('#items article').removeClass('selected');
+        $article.addClass('selected');
+        getItem($article.attr('rel'), viewItem);
+    }
 }
 
 function onMoreClick() {
-	doTagClick2();
-	$(this).remove();
-	return false;
+    doTagClick2();
+    $(this).remove();
+    return false;
 }
 
 function getItem(ids, callback) {
-	$.get('/items/' + ids, function(json) {
-		callback(json[0]);
-	},'json');
+    $.get('/items/' + ids, function(json) {
+        callback(json[0]);
+    },'json');
 }
 
 function viewItem(item) {
-	var tags;
-	var showdown = new Showdown.converter();
-	if (item.tags)
-		tags = item.tags.join(' ');
-	var html = '<article rel="' + item.id + '"><h1>';
-	if (item.url)
-		html += '<a href="' + item.url + '">';
-	html += item.title;
-	if (item.url)
-		html += '</a>';
-	html += '</h1><summary>' + tags + '</summary><section>' + showdown.makeHtml(item.body) + '</section></article>';
-	$('#item').html(html);
-	// markdown here
+    var tags;
+    var showdown = new Showdown.converter();
+    if (item.tags)
+        tags = item.tags.join(' ');
+    var html = '<article rel="' + item.id + '"><h1>';
+    if (item.url)
+        html += '<a href="' + item.url + '">';
+    html += item.title;
+    if (item.url)
+        html += '</a>';
+    html += '</h1><summary>' + tags + '</summary><section>' + showdown.makeHtml(item.body) + '</section></article>';
+    $('#item').html(html);
+    // markdown here
 }
 function editItem(item) {
-	var tags = '';
-	if(item.tags) {
-		tags = item.tags.join(' ');
-	}
-	var when = new Date( parseInt(item.createdAt) );
-	var html = '<form class="edit" rel="' + item.id + '"><input type="hidden" name="_method" value="post" />';
-	
-	html += '<div><input type="text" name="title" value="' + item.title + '" /></div>';
-	html += '<div class="left half2"><label>tags</label><input type="text" name="tags" value="' + tags + '" /></div>';
-	html += '<div class="right half2 date"><label>'+ when.format(dateFormat) + '</label><input type="text" name="createdAt" value="" /></div>';
-	html += '<div class="clear url"><label>url</label><input type="text" name="url" value="' + encodeURI(item.url) + '" /></div>';
-	html += '<textarea name="body">' + item.body + '</textarea>';
-	html += '<button class="left submit">Submit</button>';
-	html += '<button class="left delete" name="delete">Delete</button>';
-	html += '</form><br class="clear" />';
-	$('#item').html(html);
+    var tags = '';
+    if(item.tags) {
+        tags = item.tags.join(' ');
+    }
+    var when = new Date( parseInt(item.createdAt) );
+    var html = '<form class="edit" rel="' + item.id + '"><input type="hidden" name="_method" value="post" />';
+    
+    html += '<div><input type="text" name="title" value="' + item.title + '" /></div>';
+    html += '<div class="left half2"><label>tags</label><input type="text" name="tags" value="' + tags + '" /></div>';
+    html += '<div class="right half2 date"><label>'+ when.format(dateFormat) + '</label><input type="text" name="createdAt" value="" /></div>';
+    html += '<div class="clear url"><label>url</label><input type="text" name="url" value="' + encodeURI(item.url) + '" /></div>';
+    html += '<textarea name="body">' + item.body + '</textarea>';
+    html += '<button class="left submit">Submit</button>';
+    html += '<button class="left delete" name="delete">Delete</button>';
+    html += '</form><br class="clear" />';
+    $('#item').html(html);
 }
 
 function onTagClick(e) {
-	offset = 0;
-	doTagClick(this, e, false);
-	return false;
+    offset = 0;
+    doTagClick(this, e, false);
+    return false;
 }
 function onTagClick2(e) {
-	offset = 0;
-	doTagClick(this, e, true);
-	return false;
+    offset = 0;
+    doTagClick(this, e, true);
+    return false;
 }
 function onItemTagClick(e) {
-	var $el = $(this);
-	var $a = $('#tags li[rel=' + $el.attr('rel') + ']');
-	doTagClick($a[0], e, false);
-	return false;
+    var $el = $(this);
+    var $a = $('#tags li[rel=' + $el.attr('rel') + ']');
+    doTagClick($a[0], e, false);
+    return false;
 }
 function doTagClick(el, e, multiple) {
-	// how can i trigger this with the 'select none' tag link?
-	var $el = $(el);
-	var href = $el.attr('href');
-	var tag = $el.attr('rel');
-	var $li = $el.closest('li');
+    // how can i trigger this with the 'select none' tag link?
+    var $el = $(el);
+    var href = $el.attr('href');
+    var tag = $el.attr('rel');
+    var $li = $el.closest('li');
 
-	if ($li.hasClass('selected')) {
-		$li.removeClass('selected');
-	} else {
-		if (multiple == false)
-			$('#tags li.selected').removeClass('selected');
-		$li.addClass('selected');
-	}
-	offset = 0;
-	clearList();
-	doTagClick2();
-	return false;
+    if ($li.hasClass('selected')) {
+        $li.removeClass('selected');
+    } else {
+        if (multiple == false)
+            $('#tags li.selected').removeClass('selected');
+        $li.addClass('selected');
+    }
+    offset = 0;
+    clearList();
+    doTagClick2();
+    return false;
 }
 function doTagClick2() {
-	tags = selectedTags();
-	if (tags.length) {
-		currentPrefix = '/items-by-tags/' + tags.join(',') + '/';
-		// update listview
-		$.get(currentPrefix + offset, updateList, 'json');
-	} else {
-		currentPrefix = '/items-offset/';
-		$.get(currentPrefix + offset, updateList, 'json');
-	}
-	return false;
+    tags = selectedTags();
+    if (tags.length) {
+        currentPrefix = '/items-by-tags/' + tags.join(',') + '/';
+        // update listview
+        $.get(currentPrefix + offset, updateList, 'json');
+    } else {
+        currentPrefix = '/items-offset/';
+        $.get(currentPrefix + offset, updateList, 'json');
+    }
+    return false;
 }
 function onLinkClick() {
-	return false;
+    return false;
 }
 
 function onSubmitClick() {
-	var $el = $(this);
-	var $form = $el.closest('form');
-	var id, url;
+    var $el = $(this);
+    var $form = $el.closest('form');
+    var id, url;
 
-	if ($form.hasClass('editing')) {
-		$form.find('#method').val('put');
-	}
+    if ($form.hasClass('editing')) {
+        $form.find('#method').val('put');
+    }
 
-	if ($form.attr('rel'))
-		id = $form.attr('rel');
-	if (id)
-		url = '/item/' + id;
-	else
-		url = '/item';
+    if ($form.attr('rel'))
+        id = $form.attr('rel');
+    if (id)
+        url = '/item/' + id;
+    else
+        url = '/item';
 
-	$.post(
-		url,
-		$form.serializeArray(),
-		function(json) {
-			if (json.error) {
-			} else {
-				if (!id) {
-					$.get(
-						'/items',
-						function(json2) {
-							clearList();
-							updateList(json2);
-							$('.items article[rel=' + json.id + ']').addClass('selected');
-						},
-						'json'
-					);
-				} else {
-					$.get('/tags', updateTagsAndSelect, 'json');
-				}
-				getItem(json.id, (id ? viewItem : editItem));
-				// select item
-			}
-		},
-		'json'
-	);
+    $.post(
+        url,
+        $form.serializeArray(),
+        function(json) {
+            if (json.error) {
+            } else {
+                if (!id) {
+                    $.get(
+                        '/items',
+                        function(json2) {
+                            clearList();
+                            updateList(json2);
+                            $('.items article[rel=' + json.id + ']').addClass('selected');
+                        },
+                        'json'
+                    );
+                } else {
+                    $.get('/tags', updateTagsAndSelect, 'json');
+                }
+                if (id) {
+                    // Saving an existing item, so view the results
+                    viewItem(json);
+                } else {
+                    // Created a new item, so go into edit mode
+                    editItem(json);
+                }
+            }
+        },
+        'json'
+    );
 
-	return false;
+    return false;
 }
 
 function onDeleteClick() {
-	var $el = $(this);
-	var $form = $el.closest('form');
-	var url = '/item/' + $form.attr('rel') + '/delete';
-	if (!confirm('Are you sure?')) return false;
-	$.post(
-		url,
-		function(json) {
-			if (json.error) {
-			} else {
-				clearList();
-				$.get('/items', updateList, 'json');
-				$.get('/tags', updateTags, 'json');
-			}
-		},
-		'json'
-	);
+    var $el = $(this);
+    var $form = $el.closest('form');
+    var url = '/item/' + $form.attr('rel') + '/delete';
+    if (!confirm('Are you sure?')) return false;
+    $.post(
+        url,
+        function(json) {
+            if (json.error) {
+            } else {
+                clearList();
+                $.get('/items', updateList, 'json');
+                $.get('/tags', updateTags, 'json');
+            }
+        },
+        'json'
+    );
 
-	return false;
+    return false;
 }
 
 function onSearchClick() {
-	var $el = $(this);
-	var $form = $el.closest('form');
+    var $el = $(this);
+    var $form = $el.closest('form');
 
-	clearList();
-	$.post(
-		'/search',
-		$form.serializeArray(),
-		updateList,
-		'json'
-	);
+    clearList();
+    $.post(
+        '/search',
+        $form.serializeArray(),
+        updateList,
+        'json'
+    );
 
-	return false;
+    return false;
 }
 
 
 function selectedTags() {
-	var tags = [];
-	$('#tags li.selected').each(function() {
-		tags.push( $(this).attr('rel') );
-	});
-	return tags;
+    var tags = [];
+    $('#tags li.selected').each(function() {
+        tags.push( $(this).attr('rel') );
+    });
+    return tags;
 }
 
 function htmlEntities(a) {
-	return a.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return a.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

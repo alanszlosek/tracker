@@ -75,10 +75,10 @@ $routes = new TinyHelpers\Route(array(
 
 class Controller
 {
-        public function four()
-        {
-                return '404';
-        }
+    public function four()
+    {
+        return '404';
+    }
     public function index()
     {
         // render index template
@@ -169,8 +169,7 @@ class Controller
             'title' => str_replace('http:/', 'http://', $params->title),
             'tags' => 'url'
         );
-        $this->postItem($params);
-        echo 'alert("Added");';
+        return $this->postItem($params);
     }
 
     public function postItem($params)
@@ -236,39 +235,42 @@ class Controller
     {
         global $db;
         $s = $_POST['title'];
-        if ($s) {
-            // extract tags and search those explicitly afterwards
-            $result = preg_match_all('@(#[a-z0-9_-]+)@i', $s, $matches);
-            $tags = $matches[1];
-            // remove tags from rest of search text
+        if (!$s) {
+            return '[]';
+        }
+        // extract tags and search those explicitly afterwards
+        $result = preg_match_all('@(#[a-z0-9_-]+)@i', $s, $matches);
+        $tags = $matches[1];
+        // remove tags from rest of search text
+        foreach ($tags as $tag) {
+            $s = str_replace($tag, '', $s);
+        }
+        $s = trim($s); // trim out spaces
+
+        if ($s) { // still have some text to search for
+            $ids = $db->fetchColumn("select id from items where title like '%" . $s . "%' or body like '%" . $s . "%' or url like '%" . $s . "%'");
+        } else $ids = array();
+
+        if ($tags) {
+            $parts = array();
+            $sql = 'select item_id from tags WHERE ';
             foreach ($tags as $tag) {
-                $s = str_replace($tag, '', $s);
-            }
-            $s = trim($s); // trim out spaces
-
-            if ($s) { // still have some text to search for
-                $ids = $db->fetchColumn("select id from items where title like '%" . $s . "%' or body like '%" . $s . "%'");
-            } else $ids = array();
-
-            if ($tags) {
-                $parts = array();
-                $sql = 'select item_id from tags WHERE ';
-                foreach ($tags as $tag) {
-                    $sql .= 'tag=';
-                    $parts[] = $sql;
-                    $parts[] = substr($tag, 1);
-                    $sql = ' OR ';
-                }
-                $sql = 'group by item_id having count(item_id)=' . sizeof($tags);
+                $sql .= 'tag=';
                 $parts[] = $sql;
-                $tagIds = call_user_func_array(array($db, 'fetchColumn'), $parts);
-                if ($ids) $ids = array_intersect($ids, $tagIds);
-                else $ids = $tagIds;
+                $parts[] = substr($tag, 1);
+                $sql = ' OR ';
             }
+            $sql = 'group by item_id having count(item_id)=' . sizeof($tags);
+            $parts[] = $sql;
+            $tagIds = call_user_func_array(array($db, 'fetchColumn'), $parts);
+            if ($ids) $ids = array_intersect($ids, $tagIds);
+            else $ids = $tagIds;
+        }
 
-            if ($ids) return jsonItems( itemObjectsByIds($ids, 0, 'basic') );
-            else echo '[]';
-        } else echo '[]';
+        if ($ids) {
+            return jsonItems( itemObjectsByIds($ids, 0, 'basic') );
+        }
+        return '[]';
     }
 }
 
@@ -291,7 +293,8 @@ function tagItem($id, $tags)
         'book' => 'books',
         'computerscience' => 'computer-science',
         'operatingsystems' => 'operating-systems',
-        'videos' => 'video'
+        'videos' => 'video',
+        'project' => 'projects'
     );
 
     $tags = array_unique($tags);

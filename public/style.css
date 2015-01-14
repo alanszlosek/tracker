@@ -24,6 +24,12 @@ h2 {
 .item summary {
 	font-style: italic;
 }
+button {
+    margin-left: 5px;
+}
+input:focus, input:active, button:focus, button:active, textarea:focus, textarea:active {
+    outline: 2px solid #E68D29;
+}
 input, button {
 	line-height: 14pt;
 }
