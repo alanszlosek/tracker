@@ -73,6 +73,29 @@ $routes = new TinyHelpers\Route(array(
     )
 ));
 
+class QueryHelper {
+    protected $parts = array();
+    protected $string = '';
+    public function sql($value) {
+        $this->string .= $value;
+    }
+    public function value($value) {
+        if ($this->string) {
+            $this->parts[] = $this->string;
+            $this->string = '';
+        }
+        $this->parts[] = $value;
+    }
+
+    public function get() {
+        if ($this->string) {
+            $this->parts[] = $this->string;
+            $this->string = '';
+        }
+        return $this->parts;
+    }
+}
+
 class Controller
 {
     public function four()
@@ -125,31 +148,22 @@ class Controller
         $offset = $params->offset;
         if (!$offset) $offset = 0;
 
-        $parts = array();
+        $query = new QueryHelper();
         if ($tags) {
-            $sql = ' WHERE id IN (SELECT item_id FROM tags';
-            if ($tags) {
-                $sql .= ' WHERE ';
-                foreach ($tags as $tag) {
-                    $sql .= 'tag=';
-                    $parts[] = $sql;
-                    $parts[] = $tag;
-                    $sql = ' OR ';
+            $numTags = sizeof($tags);
+            $query->sql(' WHERE id IN (SELECT item_id FROM tags WHERE tag=');
+            while ($tag = array_shift($tags)) {
+                $query->value($tag);
+                if ($tags) {
+                    $query->sql(' OR tag=');
                 }
-                $sql = ' GROUP BY item_id HAVING count(item_id)=' . sizeof($tags);
             }
-            $sql .= ')';
-            $parts[] = $sql;
-            //$rows = call_user_func_array(array($db, 'fetchColumn'),  $parts);
-            //('select id from items where id in (' . $sql . ') order by items.createdAt');
+            $query->sql(' GROUP BY item_id HAVING count(item_id)=' . $numTags . ')');
+
         } else { // no tags ... pull untagged items
-            //$rows = $db->fetchColumn('select id from items where id not in (select distinct item_id from tags) order by items.createdAt');
-            $parts[] = 'SELECT id FROM items WHERE id NOT IN (select distinct item_id from tags)';
+            $query->sql('SELECT id FROM items WHERE id NOT IN (select distinct item_id from tags)');
         }
-        if ($parts)
-            return jsonItems( itemObjects($parts, $offset, 'basic') );
-        else
-            return '[]';
+        return jsonItems( itemObjects($query->get(), $offset, 'basic') );
     }
 
     public function itemTags($params)
@@ -252,17 +266,17 @@ class Controller
         } else $ids = array();
 
         if ($tags) {
-            $parts = array();
-            $sql = 'select item_id from tags WHERE ';
-            foreach ($tags as $tag) {
-                $sql .= 'tag=';
-                $parts[] = $sql;
-                $parts[] = substr($tag, 1);
-                $sql = ' OR ';
+            $query = new QueryHelper();
+            $query->sql('select item_id from tags WHERE tag=');
+            $numTags = sizeof($tags);
+            while ($tag = array_shift($tags)) {
+                $query->value(substr($tag, 1));
+                if ($tags) {
+                    $query->sql(' OR tag=');
+                }
             }
-            $sql = 'group by item_id having count(item_id)=' . sizeof($tags);
-            $parts[] = $sql;
-            $tagIds = call_user_func_array(array($db, 'fetchColumn'), $parts);
+            $query->sql('group by item_id having count(item_id)=' . $numTags);
+            $tagIds = call_user_func_array(array($db, 'fetchColumn'), $query->get());
             if ($ids) $ids = array_intersect($ids, $tagIds);
             else $ids = $tagIds;
         }
