@@ -32,8 +32,8 @@ $(function() {
         });
 
     // pull!
-    $.get('/items', updateList, 'json');
-    $.get('/tags', updateTags, 'json');
+    $.get('/api/items', updateList, 'json');
+    $.get('/api/tags', updateTags, 'json');
 
     setSizes();
 });
@@ -72,7 +72,7 @@ function updateTags(json) {
     var html = '';
     for (var i = 0; i < json.length; i++) {
         var tag = json[ i ];
-        html += '<li rel="' + tag[0] + '"><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">' + tag[0] + '</a> <span>' + tag[1] + '</span></li>';
+        html += '<li data-id="' + tag[2] + '"><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">' + tag[0] + '</a> <span>' + tag[1] + '</span></li>';
     }
     html += '<li>&nbsp;</li>';
     html += '<li rel=""><a href="#" class="tag2">&nbsp;+&nbsp</a> <a href="#" class="tag">untagged</a></li>';
@@ -131,8 +131,8 @@ function onMoreClick() {
 }
 
 function getItem(ids, callback) {
-    $.get('/items/' + ids, function(json) {
-        callback(json[0]);
+    $.get('/api/item/' + ids, function(json) {
+        callback(json);
     },'json');
 }
 
@@ -208,12 +208,9 @@ function doTagClick(el, e, multiple) {
 function doTagClick2() {
     tags = selectedTags();
     if (tags.length) {
-        currentPrefix = '/items-by-tags/' + tags.join(',') + '/';
-        // update listview
-        $.get(currentPrefix + offset, updateList, 'json');
+        $.get('/api/tag/' + tags.join(',') + '/items?offset=0', updateList, 'json');
     } else {
-        currentPrefix = '/items-offset/';
-        $.get(currentPrefix + offset, updateList, 'json');
+        $.get('/api/items?offset=0', updateList, 'json');
     }
     return false;
 }
@@ -233,9 +230,9 @@ function onSubmitClick() {
     if ($form.attr('rel'))
         id = $form.attr('rel');
     if (id)
-        url = '/item/' + id;
+        url = '/api/item/' + id;
     else
-        url = '/item';
+        url = '/api/item';
 
     $.post(
         url,
@@ -245,7 +242,7 @@ function onSubmitClick() {
             } else {
                 if (!id) {
                     $.get(
-                        '/items',
+                        '/api/items',
                         function(json2) {
                             clearList();
                             updateList(json2);
@@ -254,7 +251,7 @@ function onSubmitClick() {
                         'json'
                     );
                 } else {
-                    $.get('/tags', updateTagsAndSelect, 'json');
+                    $.get('/api/tags', updateTagsAndSelect, 'json');
                 }
                 if (id) {
                     // Saving an existing item, so view the results
@@ -282,8 +279,8 @@ function onDeleteClick() {
             if (json.error) {
             } else {
                 clearList();
-                $.get('/items', updateList, 'json');
-                $.get('/tags', updateTags, 'json');
+                $.get('/api/items', updateList, 'json');
+                $.get('/api/tags', updateTags, 'json');
             }
         },
         'json'
@@ -298,7 +295,7 @@ function onSearchClick() {
 
     clearList();
     $.post(
-        '/search',
+        '/api/search',
         $form.serializeArray(),
         updateList,
         'json'
@@ -311,7 +308,7 @@ function onSearchClick() {
 function selectedTags() {
     var tags = [];
     $('#tags li.selected').each(function() {
-        tags.push( $(this).attr('rel') );
+        tags.push( $(this).attr('data-id') );
     });
     return tags;
 }

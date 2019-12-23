@@ -1,6 +1,8 @@
-drop table if exists items;
-drop table if exists tags;
-create table items (
+drop table if exists item;
+drop table if exists tag;
+drop table if exists item_tag;
+
+create table item (
 	id integer primary key autoincrement,
 	createdAt integer not null default 0,
 	updatedAt integer not null default 0,
@@ -8,7 +10,8 @@ create table items (
 	url text not null,
 	body text not null
 );
-create index item_createdAt on items (createdAt);
+create index item_createdAt on item (createdAt);
+
 
 create table tags (
 	tag text,
@@ -16,3 +19,24 @@ create table tags (
 );
 create index tag_item_id on tags (item_id);
 create index tag_fields on tags (tag,item_id);
+
+
+
+-- alter table items rename to item;
+create table tag (
+	id integer primary key autoincrement,
+	tag text
+);
+create index tag_tag on tag (tag);
+
+
+create table item_tag (
+	item_id integer,
+	tag_id integer
+);
+create unique index tag_tagitem on item_tag (tag_id,item_id);
+create unique index tag_itemtag on item_tag (item_id,tag_id);
+
+
+-- insert into tag (tag) select distinct tag from tags order by tag;
+-- insert into item_tag (item_id,tag_id) select distinct tags.item_id,tag.id from tags left join tag on (tags.tag=tag.tag)

@@ -1,0 +1,7 @@
+127.0.0.1:10000 {
+    root /Users/alanszlosek/Projects/tracker/public
+
+    proxy /api http://localhost:5000 {
+        without /api
+    }
+}
