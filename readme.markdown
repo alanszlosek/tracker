@@ -1,17 +1,25 @@
 Introduction
 ====
 
-This is the next iteration of my tracker tool. I use it for journal keeping, blog staging, link-tracking, logging comments on said links.
-
-This version is simpler than the last, though the UI is much fancier. The PHP code accepts and returns JSON, interacts with MySQL. The UI is a three-column setup (inspired by thinkery.me): tags sorted by frequency, items, item currently being viewed or edited.
+I use Tracker for journal keeping, blog staging, link-tracking, logging comments on said links. The UI is a three-column setup (inspired by thinkery.me): tags sorted by frequency, then items, then the item currently being viewed or edited.
 
 Here's what it looks like: [tracker.png](https://www.greaterscope.net/files/tracker.png)
 
 Requirements
 ====
 
-* PHP 5.3+
-* MySQL (though, since I use dbFacile, it's likely to work fine with SQLite as well)
+* Python 3
+* pip3 - to install other dependencies
+
+Installation
+====
+
+1. `cd src`
+1. `python3 -m venv ./venv`
+1. `source venv/bin/activate`
+1. `pip install flask`
+1. `cat ../config/schema.sqlite3 | sqlite3 ../database/tracker.sqlite3`
+1. `env FLASK_APP=main.py flask run`
 
 Features
 ====
