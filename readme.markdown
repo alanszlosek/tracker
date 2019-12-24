@@ -18,7 +18,7 @@ Installation
 1. `python3 -m venv ./venv`
 1. `source venv/bin/activate`
 1. `pip install flask`
-1. `cat ../config/schema.sqlite3 | sqlite3 ../database/tracker.sqlite3`
+1. `cat ../config/schema.sqlite3 | sqlite3 ../database/tracker.db`
 1. `env FLASK_APP=main.py flask run`
 
 Features

@@ -5,7 +5,7 @@ import sqlite3
 import time
 
 def connect_db():
-    return sqlite3.connect('../database/tracker.sqlite3')
+    return sqlite3.connect('../database/tracker.db')
 
 app = Flask(__name__)
 
