@@ -39,4 +39,4 @@ create unique index tag_itemtag on item_tag (item_id,tag_id);
 
 
 -- insert into tag (tag) select distinct tag from tags order by tag;
--- insert into item_tag (item_id,tag_id) select distinct tags.item_id,tag.id from tags left join tag on (tags.tag=tag.tag)
+-- insert into item_tag (item_id,tag_id) select distinct tags.item_id,tag.id from tags left join tag on (tags.tag=tag.tag);
