@@ -208,9 +208,9 @@ function doTagClick(el, e, multiple) {
 function doTagClick2() {
     tags = selectedTags();
     if (tags.length) {
-        $.get('/api/tag/' + tags.join(',') + '/items?offset=0', updateList, 'json');
+        $.get('/api/tag/' + tags.join(',') + '/items?offset=' + offset, updateList, 'json');
     } else {
-        $.get('/api/items?offset=0', updateList, 'json');
+        $.get('/api/items?offset=' + offset, updateList, 'json');
     }
     return false;
 }

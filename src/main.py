@@ -32,6 +32,10 @@ def getItems():
 
 @app.route("/tag/<tags>/items")
 def getItemsByTag(tags):
+    offset = 0
+    if 'offset' in request.args:
+        offset = int(request.args['offset'])
+
     db = g.db
     c = db.cursor()
     tags = tags.split(',')
@@ -40,7 +44,7 @@ def getItemsByTag(tags):
     ids = []
     for tag in c:
         ids.append(tag[0])
-    return json.dumps( itemObjects(0, ids) )
+    return json.dumps( itemObjects(offset, ids) )
 
 
 @app.route("/item/<int:id>", methods=['GET'])
@@ -56,11 +60,11 @@ def itemObjects(offset, ids):
         # map ids to ints, to strings, to IN clause
         ids = list(map(str, ids))
         ids = ','.join(ids)
-        c.execute("select id,title,createdAt FROM item WHERE id IN (%s) ORDER BY createdAt DESC LIMIT 0,20" % (ids,))
+        c.execute("select id,title,createdAt FROM item WHERE id IN (%s) ORDER BY createdAt DESC LIMIT ?,20" % (ids,), (offset,))
         d.execute('SELECT item_tag.item_id,tag.tag FROM item_tag LEFT JOIN tag ON (item_tag.tag_id=tag.id) WHERE item_tag.item_id IN (%s) ORDER BY item_tag.item_id DESC, tag.tag ASC' % (ids,))
     else:
-        c.execute("select id,title,createdAt FROM item ORDER BY createdAt DESC LIMIT 0,20")
-        d.execute('SELECT item_tag.item_id,tag.tag FROM item_tag LEFT JOIN tag ON (item_tag.tag_id=tag.id) WHERE item_tag.item_id IN (select id FROM item ORDER BY createdAt DESC LIMIT 0,20) ORDER BY item_tag.item_id DESC, tag.tag ASC')
+        c.execute("select id,title,createdAt FROM item ORDER BY createdAt DESC LIMIT ?,20", (offset,))
+        d.execute('SELECT item_tag.item_id,tag.tag FROM item_tag LEFT JOIN tag ON (item_tag.tag_id=tag.id) WHERE item_tag.item_id IN (select id FROM item ORDER BY createdAt DESC LIMIT ?,20) ORDER BY item_tag.item_id DESC, tag.tag ASC', (offset,))
     item_tag = d.fetchall()
 
     for row in c:
